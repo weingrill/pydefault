@@ -1,0 +1,9 @@
+glob:*.pyc
+glob:HealthExpenditure.csv
+glob:LRc06_E2_0155.pdf
+glob:detrend.pdf
+glob:detrend1.pdf
+glob:detrend1.png
+glob:healthvsexpense.png
+glob:histogram.pdf
+glob:multipage_pdf.pdf
