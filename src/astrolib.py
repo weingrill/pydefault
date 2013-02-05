@@ -4,14 +4,14 @@ Created on 05.02.2013
 @author: jwe
 '''
 def wcssph2xy(longitude,latitude,x,y,map_type, ctype=None,\
-              face=None, pv2 = None,\
+              face=None, pv2 = [0,0],\
               crval=None,crxy=None,longpole=None, latpole= None, \
               north_offset=None, south_offset=None, \
               badindex=None):
 
 # DEFINE ANGLE CONSTANTS
     from math import pi
-    from numpy import nan
+    from numpy import nan, empty, where
     pi2 = pi/2.0
     radeg = 57.295779513082323
     map_types=['DEF','AZP','TAN','SIN','STG','ARC','ZPN','ZEA','AIR','CYP',\
@@ -30,13 +30,44 @@ def wcssph2xy(longitude,latitude,x,y,map_type, ctype=None,\
         print 'MAP_TYPE must be >= 0 and < '+\
             len(map_types)+'; it was set to '+\
             str(map_type)
+# Convert all longitude values into the range -180 to 180 so that equations
+# work properly.
+    lng = float( longitude )
+    lat = float( latitude )
+    temp = where(lng >= 180.0)
+    if len(temp) > 0:
+        lng[temp] = lng[temp] - 360.0
+
+    if len(crval) >= 2:
+        if len(map_type) == 0:
+            wmt = where(projection_type == map_types)
+            map_type = wmt[0]
+        conic = (map_type >= 13) and (map_type <= 16)
+        zenithal = ((map_type >= 1) and (map_type <= 8)) or (map_type == 26)
+
+# Rotate from standard celestial coordinates into the native system.
+        if conic:
+            theta0 = pv2[0] 
+        elif zenithal:
+            theta0 = 90
+        else: 
+            theta0 = 0
+        phi = 0.
+        theta = 0.
+        wcs_rotate( lng, lat, phi, theta, crval, \
+                latpole = latpole, longpole=longpole, theta0 = theta0)
+        phi = phi/radeg
+        theta = theta/radeg
+    else:
+        phi = lng/radeg
+        theta = lat/radeg
 
     if projection_type == 'TAN':
         sz_theta = len(theta)
         if sz_theta[0] == 0: 
             x = nan 
         else:
-            x = make_array(value = !values.D_NAN, dimen=sz_theta)
+            x = empty(sz_theta)
         y = x
         g = where(theta > 0)
         if len(g) > 0:
