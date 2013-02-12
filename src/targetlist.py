@@ -1,0 +1,28 @@
+'''
+Created on Feb 8, 2013
+
+@author: jwe
+'''
+def dd2dms(degrees):
+    d = int(degrees)
+    m = int((degrees-d)*60.)
+    s = ((degrees-d)*60.-m)*60. 
+    return (d,m,s)
+
+def dd2hms(degrees):
+    hours = degrees/15.
+    h = int(hours)
+    m = int((hours-h)*60.)
+    s = ((hours-h)*60.-m)*60. 
+    return (h,m,s)
+
+f = open('/work1/jwe/exoplanets/hoststars.tst')
+lines = f.readlines()
+f.close()
+lines = lines[18:-1]
+for l in lines:
+    obj, ra, dec = l.split('\t')
+    h,m,s = dd2hms(float(ra))
+    dd,dm,ds = dd2dms(float(dec))
+    obj = obj.replace(' ','')
+    print '%-20s %02d %02d %04.1f %02d %02d %02.0f 2000' % (obj, h,m,s, dd,dm,ds)
