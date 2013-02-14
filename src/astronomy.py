@@ -48,6 +48,29 @@ def mjd(datetime):
     """returns the modified Julian date (MJD) of a given time."""
     return jd(datetime)-2400000.5
 
+def caldat(mjd):
+    """returns the datetime value of the given MJD mjd"""
+    from datetime import datetime
+    from math import floor
+    a = int(mjd + 2400001.0)
+    if a < 2299161:
+        b = 0
+        c = a + 1524
+    else:
+        b = int((a-1867216.25)/36524.25)
+        c = a + b - (b/4) + 1525
+    d = int((c-122.1)/365.25)
+    e = 365*d + d/4
+    f = int((c-e)/30.6001)
+    day = c - e - int(30.6001*f)
+    month = f - 1 - 12*(f/14)
+    year = d - 4715 - ((7+month)/10)
+    fracofday = mjd - floor(mjd)
+    hour = int(fracofday*24)
+    minute = int(fracofday*24*60) - hour*60
+    second = int(fracofday*24*60*60)
+    return datetime(year, month, day, hour, minute, second)
+    
 class celestialobject(object):
     def __init__(self, observer):
         self.ra = 0.0
