@@ -71,6 +71,29 @@ def caldat(mjd):
     minute = int(fracofday*24*60) - hour*60
     second = int(fracofday*24*60*60)
     return datetime(year, month, day, hour, minute, second)
+
+def ecl2equ(coords, jd):
+    from math import pi, sin, cos, asin
+    l = coords[0]
+    b = coords[1]
+    t = (jd-2451545.0) / 36525 
+    dtor = pi/180. # degrees to radians
+    eps = 23.439291*dtor-t*0.013004*dtor
+    delta = asin(sin(eps)*cos(b)*sin(l)+cos(eps)*sin(b))
+    alpha = cos(b)*cos(l)/cos(delta)
+    return((alpha,delta))      
+
+def equ2ecl(coords, jd):
+    from math import pi, sin, cos, asin
+    alpha = coords[0]
+    delta = coords[1]
+    t = (jd-2451545.0) / 36525 
+    dtor = pi/180. # degrees to radians
+    eps = 23.439291*dtor-t*0.013004*dtor
+    b = asin(cos(eps)*sin(delta)-sin(eps)*cos(delta)*sin(alpha))
+    l = cos(delta)*cos(alpha)/cos(b)
+    return((l,b))
+
     
 class celestialobject(object):
     def __init__(self, observer):
