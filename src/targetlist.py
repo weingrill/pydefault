@@ -3,18 +3,7 @@ Created on Feb 8, 2013
 
 @author: jwe
 '''
-def dd2dms(degrees):
-    d = int(degrees)
-    m = int((degrees-d)*60.)
-    s = ((degrees-d)*60.-m)*60. 
-    return (d,m,s)
-
-def dd2hms(degrees):
-    hours = degrees/15.
-    h = int(hours)
-    m = int((hours-h)*60.)
-    s = ((hours-h)*60.-m)*60. 
-    return (h,m,s)
+from astronomy import dd2hms, dd2dms
 
 f = open('/work1/jwe/exoplanets/hoststars.tst')
 lines = f.readlines()

@@ -26,24 +26,25 @@ def jd(datetime):
         b = 0
     return (int(365.25*(y+4716)) + int(30.6001*(m+1)) + d + h + b - 1524.5)
 
-def hms2dd(hh,mm,ss):
-    return ((hh + mm/60. + ss/3600)*360./24.)
+def hms2dd(hms):
+    """convert hours, minutes seconds to degrees"""
+    return ((hms[0] + hms[1]/60. + hms[2]/3600)*15.)
 
 def dd2dms(degrees):
+    """convert degrees to degrees, minutes, seconds"""
     d = int(degrees)
     m = int((degrees-d)*60.)
     s = ((degrees-d)*60.-m)*60. 
     return (d,m,s)
 
 def dd2hms(degrees):
+    """convert degrees to hours, minutes, seconds"""
     hours = degrees/15.
     h = int(hours)
     m = int((hours-h)*60.)
     s = ((hours-h)*60.-m)*60. 
     return (h,m,s)
 
-
-   
 def mjd(datetime):
     """returns the modified Julian date (MJD) of a given time."""
     return jd(datetime)-2400000.5
