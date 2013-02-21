@@ -30,28 +30,32 @@ class detector(object):
         self.pixelsize = pixelsize
     
     def width(self):
+        """returns the width of the detectors size"""
         return self.pixels[0]*self.pixelsize
 
     def height(self):
+        """returns the height of the detectors size"""
         return self.pixels[1]*self.pixelsize
     
     def size(self):
+        """returns the dimesions of the sensor"""
         return self.pixels*self.pixelsize
 
     def diameter(self):
+        """diagonal dimension of the sensor"""
         from math import sqrt
         return sqrt(sum(self.pixels**2))*self.pixelsize 
 
     def fieldofview(self, telescope):
+        """sensors field of view in radians"""
         from math import atan
         return 2.*atan(self.diameter()/(2.*telescope.focallength))
 
     def pixelfov(self, telescope):
-        """
-        returns the angular 
-        """
+        """returns the angular resolution in radians"""
         from math import atan
         return 2.*atan(self.pixelsize/(2.*telescope.focallength))
+    
     def criticalfocal(self, telescope, wavelength=550e-9):
         """
         returns critical focal length (p. 22 in AIP)
