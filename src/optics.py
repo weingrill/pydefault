@@ -84,30 +84,23 @@ class telescope(object):
         self.focallength = focallength
     
     def focalratio(self):
-        """
-        returns the focal ratio of the telescope
-        """
+        """returns the focal ratio of the telescope"""
         return self.focallength/self.diameter
     
     def fwhm(self, wavelength=550e-9):
-        """
-        returns the linear FWHM of a perfect stellar image
-        """
+        """returns the linear FWHM of a perfect stellar image"""
         return 1.02*wavelength*self.focallength/self.diameter
     
     def airy(self, wavelength=550e-9):
-        """
-        returns the linear diameter of the Airy disk
-        """
+        """returns the linear diameter of the Airy disk"""
         return 2.44*wavelength*self.focalratio()
     
     def fieldofview(self, detector):
+        """retursn the angular field of view of a detector on the telescope"""
         from math import atan
         return 2.*atan(detector.diameter/(2.*self.focallength))
         
     def resolution(self, wavelength=550e-9):
-        """
-        returns the angular resolution in radians
-        """
+        """returns the angular resolution in radians"""
         return 1.02*wavelength/self.diameter
     
