@@ -28,7 +28,11 @@ def jd(datetime):
 
 def hms2dd(hms):
     """convert hours, minutes seconds to degrees"""
-    return ((hms[0] + hms[1]/60. + hms[2]/3600)*15.)
+    return ((hms[0] + hms[1]/60. + hms[2]/3600.)*15.)
+
+def dms2dd(dms):
+    """convert degrees, minutes seconds to degrees"""
+    return (dms[0] + dms[1]/60. + dms[2]/3600.)
 
 def dd2dms(degrees):
     """convert degrees to degrees, minutes, seconds"""

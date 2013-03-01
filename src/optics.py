@@ -44,12 +44,14 @@ class detector(object):
     def diameter(self):
         """diagonal dimension of the sensor"""
         from math import sqrt
-        return sqrt(sum(self.pixels**2))*self.pixelsize 
+        return sqrt(self.pixels[0]**2+self.pixels[1]**2)*self.pixelsize 
 
     def fieldofview(self, telescope):
-        """sensors field of view in radians"""
+        """sensors field of view in radians for the diagonal, x and y"""
         from math import atan
-        return 2.*atan(self.diameter()/(2.*telescope.focallength))
+        return (2.*atan(self.diameter()/(2.*telescope.focallength)),
+                2.*atan(self.pixels[0]*self.pixelsize/(2.*telescope.focallength)),
+                2.*atan(self.pixels[1]*self.pixelsize/(2.*telescope.focallength)))
 
     def pixelfov(self, telescope):
         """returns the angular resolution in radians"""
@@ -62,6 +64,11 @@ class detector(object):
         the focal length of the telescope must be smaller or equal to this.
         """
         return telescope.diameter*self.pixelsize/(0.51*wavelength)
+    
+    def focusdepth(self, telescope, wavelength=550e-9):
+        """returns the depth of focus (AIP, p.58)"""
+        n = telescope.focalratio()
+        return max([self.pixelsize*n, 4.0*n**2*wavelength])
     
 class telescope(object):
     """
