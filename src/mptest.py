@@ -24,7 +24,7 @@ if __name__ == '__main__':
     for each in Workers:
         each.start()
         
-    for each in range(n):
+    for each in range(n)*2:
         myTasks.put(each)
         
     while n:

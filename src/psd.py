@@ -3,6 +3,53 @@ Created on Apr 8, 2013
 
 @author: jwe <jweingrill@aip.de>
 '''
+def mpsd(t, y):
+    from multiprocessing import Queue, Process
+
+    from numpy import linspace, array, empty, cos, sin, dot, argsort
+    from numpy.linalg import inv
+    
+    def worker(tasks, results):
+        # get a task
+        task = tasks.get()
+        wi = task['wi']
+        t = task['t']
+        y = task['y']
+        N = len(y)
+        # do operation
+        A = array([[cos(wi*ti),sin(wi*ti)] for ti in t])
+        AT = A.T
+        R = dot(AT, A) 
+        r = dot(AT, y)
+        result = dot(dot(r.T,inv(R)),r)/N
+
+        # put the result in results queue
+        results.put([wi/(2.0*pi),result])
+    
+
+    N = len(y)
+    
+    w = 2.0*pi*linspace(0.001, 0.5, N)
+    f_result = empty(len(w))
+    P_result = empty(len(w))
+
+    # create my tasks and results Queues.
+    myTasks = Queue()
+    myResults = Queue()
+    Workers = [Process(target=worker, args=(myTasks, myResults)) for i in range(N)]
+    
+    for each in Workers:
+        each.start()
+        
+    for i in range(N):
+        task = {'wi':w[i], 't':t, 'y':y}
+        myTasks.put(task)
+        
+    while N:
+        f_result[N-1],P_result[N-1] = myResults.get()
+        N -= 1
+    k = argsort(f_result)    
+    return [P_result[i] for i in k], [f_result[i] for i in k]   
 
 def psd(t, y):
     """
@@ -14,7 +61,7 @@ def psd(t, y):
     
     N = len(y)
     
-    w = 2.0*pi*linspace(0.001,0.5,N*10)
+    w = 2.0*pi*linspace(0.001,0.5,N)
     result = empty(len(w))
     i = 0
     for wi in w:
@@ -39,6 +86,11 @@ if __name__ == '__main__':
     phi1 = 0.0
     phi2 = 0.784357
     y = 3.0*cos(2*pi*f1*n+phi1) + 4.0*cos(2*pi*f2*n+phi2)
+
+    px, f = mpsd(n,y)
+    #px, f = psd(n,y)
+
+    
     import matplotlib
     matplotlib.use('WXAgg')
     import matplotlib.pyplot as plt
@@ -49,7 +101,6 @@ if __name__ == '__main__':
     ax.set_ylabel('$y_n$')
     ax.plot(n, y, '.')
     ax.plot(n, y, '--')
-    px, f = psd(n,y)
     
     ax = fig.add_subplot(2,1,2)
     ax.set_xlabel('f')
