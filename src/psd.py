@@ -3,6 +3,43 @@ Created on Apr 8, 2013
 
 @author: jwe <jweingrill@aip.de>
 '''
+
+def ppsd(t, y):
+    from multiprocessing import Pool
+
+    from numpy import linspace, array, cos, sin, dot
+    from numpy.linalg import inv
+
+    N = len(y)
+    
+    def init(argst, argsy):
+        global t_global
+        global y_global
+        
+        t_global = argst
+        y_global = argsy
+        print "init"
+    
+    def worker(wi):
+        global t_global
+        global y_global
+        
+        N = len(t_global)
+        print N
+        A = array([[cos(wi*ti),sin(wi*ti)] for ti in t_global])
+        AT = A.T
+        R = dot(AT, A) 
+        r = dot(AT, y_global)
+        return dot(dot(r.T,inv(R)),r)/N
+
+    w = 2.0*pi*linspace(0.001, 0.5, N)
+
+    pool = Pool(initializer=init, initargs=(t,y))
+    p = pool.map(worker, w)
+    pool.close() # no more tasks
+    pool.join()  # wrap up current tasks
+    return p, w/(2.0*pi)
+
 def mpsd(t, y):
     from multiprocessing import Queue, Process
 
@@ -74,8 +111,7 @@ def psd(t, y):
     return result,w/(2.0*pi)
 
 if __name__ == '__main__':
-    from numpy import arange, cos
-    from math import pi
+    from numpy import cos, pi
     import numpy as np
     #n = arange(30)
     N = 300
@@ -87,7 +123,7 @@ if __name__ == '__main__':
     phi2 = 0.784357
     y = 3.0*cos(2*pi*f1*n+phi1) + 4.0*cos(2*pi*f2*n+phi2)
 
-    px, f = mpsd(n,y)
+    px, f = ppsd(n,y)
     #px, f = psd(n,y)
 
     
