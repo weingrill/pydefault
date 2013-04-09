@@ -4,34 +4,34 @@ Created on Apr 8, 2013
 @author: jwe <jweingrill@aip.de>
 '''
 
-def ppsd(t, y):
-    from multiprocessing import Pool
+def init(argst, argsy):
+    global t_global
+    global y_global
+        
+    t_global = argst
+    y_global = argsy
 
-    from numpy import linspace, array, cos, sin, dot
+def worker(wi):
+    from numpy import array, cos, sin, dot
     from numpy.linalg import inv
 
-    N = len(y)
-    
-    def init(argst, argsy):
-        global t_global
-        global y_global
+    global t_global
+    global y_global
         
-        t_global = argst
-        y_global = argsy
-        print "init"
+    N = len(t_global)
+    A = array([[cos(wi*ti),sin(wi*ti)] for ti in t_global])
+    AT = A.T
+    R = dot(AT, A) 
+    r = dot(AT, y_global)
+    return dot(dot(r.T,inv(R)),r)/N
     
-    def worker(wi):
-        global t_global
-        global y_global
-        
-        N = len(t_global)
-        print N
-        A = array([[cos(wi*ti),sin(wi*ti)] for ti in t_global])
-        AT = A.T
-        R = dot(AT, A) 
-        r = dot(AT, y_global)
-        return dot(dot(r.T,inv(R)),r)/N
 
+
+def ppsd(t, y):
+    from multiprocessing import Pool
+    from numpy import linspace
+
+    N = len(y)
     w = 2.0*pi*linspace(0.001, 0.5, N)
 
     pool = Pool(initializer=init, initargs=(t,y))
