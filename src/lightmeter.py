@@ -76,6 +76,12 @@ class LightMeter(object):
         hours = HourLocator()
         hoursFmt = DateFormatter("%H")
         ax1 = plt.subplot(211)
+        # Two subplots, the axes array is 1-d
+        #f, axarr = plt.subplots(2, sharex=True)
+        #axarr[0].plot(x, y)
+        #axarr[0].set_title('Sharing X axis')
+        #axarr[1].scatter(x, y)
+
         ax1.xaxis.set_major_locator(hours)
         ax1.xaxis.set_major_formatter(hoursFmt)
         plt.ylim(7,-21)

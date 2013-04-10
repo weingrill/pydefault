@@ -4,14 +4,14 @@ Created on Apr 8, 2013
 @author: jwe <jweingrill@aip.de>
 '''
 
-def init(argst, argsy):
+def _init(argst, argsy):
     global t_global
     global y_global
         
     t_global = argst
     y_global = argsy
 
-def worker(wi):
+def _worker(wi):
     from numpy import array, cos, sin, dot
     from numpy.linalg import inv
 
@@ -24,8 +24,6 @@ def worker(wi):
     R = dot(AT, A) 
     r = dot(AT, y_global)
     return dot(dot(r.T,inv(R)),r)/N
-    
-
 
 def ppsd(t, y):
     from multiprocessing import Pool
@@ -34,8 +32,8 @@ def ppsd(t, y):
     N = len(y)
     w = 2.0*pi*linspace(0.001, 0.5, N)
 
-    pool = Pool(initializer=init, initargs=(t,y))
-    p = pool.map(worker, w)
+    pool = Pool(initializer=_init, initargs=(t,y))
+    p = pool.map(_worker, w)
     pool.close() # no more tasks
     pool.join()  # wrap up current tasks
     return p, w/(2.0*pi)
@@ -114,7 +112,7 @@ if __name__ == '__main__':
     from numpy import cos, pi
     import numpy as np
     #n = arange(30)
-    N = 300
+    N = 3000
     n = np.random.random_sample((N,))*N
     n.sort()
     f1 = 0.25
