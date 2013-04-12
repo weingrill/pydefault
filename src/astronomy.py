@@ -9,8 +9,30 @@ def now():
     import datetime
     return datetime.datetime.utcnow()
 
+def airmass(h):
+    """
+    calulates the airmass as a function of height h in degrees
+    taken fom Wikipedia
+    """
+    from numpy import sin, pi,array
+    
+    h = array(h)
+    #if min(h) < 0.0 or max(h) > 90.0:
+    #    raise ValueError('h = %s must be in [0.,90.]' % h)
+        
+    return 1.0/sin((h + 244/(165 + 47*h**1.1))*pi/180)
+
+def mag_distance(d):
+    """
+    calculates the magnitude of a solar like star
+    at the given distance d in parsec
+    """
+    from numpy import log10
+    return 5.0*log10(d) - 5.0 + 4.83
+    
 def jd(datetime):
-    """returns the Julian Day of a given time. datetime must be a datetime object"""
+    """returns the Julian Day of a given time. 
+    datetime must be a datetime object"""
     if datetime.month > 2:
         y = datetime.year
         m = datetime.month
@@ -36,16 +58,18 @@ def dms2dd(dms):
 
 def dd2dms(degrees):
     """convert degrees to degrees, minutes, seconds"""
-    d = int(degrees)
-    m = int((degrees-d)*60.)
+    from math import trunc
+    d = trunc(degrees)
+    m = trunc((degrees-d)*60.)
     s = ((degrees-d)*60.-m)*60. 
     return (d,m,s)
 
 def dd2hms(degrees):
     """convert degrees to hours, minutes, seconds"""
-    hours = degrees/15.
-    h = int(hours)
-    m = int((hours-h)*60.)
+    from math import trunc
+    hours = trunc(degrees/15.)
+    h = trunc(hours)
+    m = trunc((hours-h)*60.)
     s = ((hours-h)*60.-m)*60. 
     return (h,m,s)
 
