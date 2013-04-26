@@ -5,14 +5,17 @@ Created on Jan 24, 2013
 '''
 
 def radtoarcsec(radians):
+    """converts radians to arcseconds"""
     from math import pi
     return radians*3600.*180./pi
 
 def radtoarcmin(radians):
+    """converts radians to arcminutes"""
     from math import pi
     return radians*60.*180./pi
 
 def radtodeg(radians):
+    """converts radians to degrees"""
     from math import pi
     return radians*180./pi
 
@@ -20,15 +23,22 @@ class detector(object):
     """
     detector class
     """
-    def __init__(self, pixels, pixelsize):
+    def __init__(self, pixels, pixelsize, detname=None):
         """
         constructor of the detector class
         requires pixels with two entries: [width, height]
         pixelsize (assumed to be quadratic)
         """
+        detdb = {'ICX205AL':([1280,960],4.65e-6),
+                 'ICX204AL':([1024,768],4.65e-6),
+                 'ICX098BL': ([640,480],5.6e-6),
+                 'ICX618ALA':([640,480],5.6e-6),
+                 }
+        if detname in detdb:
+            pixels, pixelsize = detdb[detname]
         self.pixels = pixels
         self.pixelsize = pixelsize
-    
+            
     def width(self):
         """returns the width of the detectors size"""
         return self.pixels[0]*self.pixelsize
@@ -38,8 +48,8 @@ class detector(object):
         return self.pixels[1]*self.pixelsize
     
     def size(self):
-        """returns the dimesions of the sensor"""
-        return self.pixels*self.pixelsize
+        """returns the dimensions of the sensor"""
+        return [self.pixels[0]*self.pixelsize, self.pixels[1]*self.pixelsize]
 
     def diameter(self):
         """diagonal dimension of the sensor"""
@@ -75,11 +85,15 @@ class telescope(object):
     telescope class
     """
 
-    def __init__(self, diameter, focallength):
+    def __init__(self, diameter, focallength, name=None):
         """
         Constructor
         diameter and focal length in meters
         """
+        teldb = {'C11':(0.2794,2.794), 
+                 'MTO1000':(0.1,1.0)}
+        if name in teldb:
+            diameter, focallength = teldb[name]
         self.diameter = diameter
         self.focallength = focallength
     
