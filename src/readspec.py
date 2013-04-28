@@ -32,6 +32,7 @@ class Spectrum(object):
     
     def continuum(self, width):   
         from numpy import array, ones, hstack
+        from scipy.stats import hmean
         c = [] 
         leftpad = ones(width/2)*self.intensity[0]
         rightpad = ones(width-width/2)*self.intensity[-1]
@@ -39,7 +40,7 @@ class Spectrum(object):
 
         for i in range(len(self.intensity)):
             p = padded[i:i+width]
-            hm = 1.0/sum([1.0/pi for pi in p])
+            hm = hmean(p)
             c.append(hm*width)
         self.cont = array(c)
         
