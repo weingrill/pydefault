@@ -3,6 +3,13 @@ Created on 28.04.2013
 
 @author: jwe
 '''
+
+def kappa(t,rho):
+    a = 5.6707e-8 # radiation constant
+    c = 2.99792458e8 # speed of light
+    
+    return 4.0*a*c*t**3/(3.0*rho*lamb)
+
 def deriv(y,t): # return derivatives of the array y
     a = -2.0
     b = -0.1
