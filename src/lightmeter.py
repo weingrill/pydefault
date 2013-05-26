@@ -26,7 +26,7 @@ class LightMeter(object):
         1.4.2013;19:52:43;1,5;oC;41784;ok;
 
         """
-        from numpy import log10
+        from numpy import log10,array
         from datetime import datetime
         
         f = open(filename)
@@ -34,21 +34,13 @@ class LightMeter(object):
         f.close()
         # skip head
         lines = lines[3:]
-        for line in lines:
-            cols = line.split(';')
-            if cols[0] != '#':
-                t = cols[0].split('.')
-                dd,mo,yy = int(t[0]), int(t[1]), int(t[2])
+        times = [l.split(';')[0]+' '+l.split(';')[1] for l in lines]
+        self.time = [datetime.strptime(t,'%d.%m.%Y %H:%M:%S') for t in times]
+        temps = [l.split(';')[2] for l in lines]
+        self.temp = array([float(t.replace(',','.')) for t in temps])
+        self.flux = array([float(l.split(';')[4]) for l in lines])
+        self.mag = -2.5*log10(self.flux)
                 
-                t = cols[1].split(':')
-                hh,mm,ss = int(t[0]), int(t[1]), int(t[2])
-                self.time.append(datetime(yy,mo,dd,hh,mm,ss))
-                self.temp.append(float(cols[2].replace(',','.')))
-                flux = float(cols[4])
-                self.flux.append(flux)
-                
-                self.mag.append(-2.5*log10(float(cols[4])))
-
     def tolux(self, a=2.48e-7, b=0.7e-5, c=1.0e5):
         from numpy import exp, array
         flux = array(self.flux)
@@ -75,30 +67,30 @@ class LightMeter(object):
         from matplotlib.dates import HourLocator, DateFormatter
         hours = HourLocator()
         hoursFmt = DateFormatter("%H")
-        ax1 = plt.subplot(211)
+        #ax1 = plt.subplot(211)
         # Two subplots, the axes array is 1-d
-        #f, axarr = plt.subplots(2, sharex=True)
-        #axarr[0].plot(x, y)
-        #axarr[0].set_title('Sharing X axis')
-        #axarr[1].scatter(x, y)
-
-        ax1.xaxis.set_major_locator(hours)
-        ax1.xaxis.set_major_formatter(hoursFmt)
-        plt.ylim(7,-21)
-        plt.xtitle = 'time'
-        plt.ytitle = 'flux'
-        plt.grid()
-        plt.plot_date(self.time, self.tomag(),'r')
-        ax2 = plt.subplot(212)
-        ax2.xaxis.set_major_locator(hours)
-        ax2.xaxis.set_major_formatter(hoursFmt)
-        plt.xtitle = 'time'
-        plt.ytitle = 'temperature (C)'
-        plt.grid()
-        plt.plot_date(self.time, smooth(self.temp),'b')
+        f, axarr = plt.subplots(2, sharex=True)
+        
+        axarr[0].set_ylim(7,-21)
+        axarr[0].ytitle = 'flux'
+        axarr[0].grid()
+        axarr[0].plot_date(self.time, self.tomag(),'r')
+        
+        #plt.xtitle = 'time'
+        axarr[1].xaxis.set_major_locator(hours)
+        axarr[1].xaxis.set_major_formatter(hoursFmt)
+        axarr[1].xtitle = 'time'
+        axarr[1].ytitle = 'temperature (C)'
+        axarr[1].grid()
+        axarr[1].plot_date(self.time, smooth(self.temp),'b')
         plt.show()
 
 if __name__ == '__main__':
+    import sys
     lm = LightMeter()
-    lm.loadfile('/home/jwe/Downloads/20130403T120002.txt')
+    if len(sys.argv)==2:
+        filename = sys.argv[1]
+    else:
+        filename = '/Users/jwe/Downloads/20130524T120003.txt'
+    lm.loadfile(filename)
     lm.plot()
