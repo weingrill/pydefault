@@ -19,7 +19,7 @@ def radtodeg(radians):
     from math import pi
     return radians*180./pi
 
-class detector(object):
+class Detector(object):
     """
     detector class
     """
@@ -80,18 +80,20 @@ class detector(object):
         n = telescope.focalratio()
         return max([self.pixelsize*n, 4.0*n**2*wavelength])
     
-class telescope(object):
+class Telescope(object):
     """
     telescope class
     """
 
     def __init__(self, diameter, focallength, name=None):
         """
-        Constructor
-        diameter and focal length in meters
+        diameter and focal length in meters 
+        an optional given name overrides the diameter and the focallength
         """
         teldb = {'C11':(0.2794,2.794), 
-                 'MTO1000':(0.1,1.0)}
+                 'MTO1000':(0.1,1.0),
+                 'Cassegrain50':(0.5,7.5),
+                 'Zeiss110':(0.11,0.11*7.5)}
         if name in teldb:
             diameter, focallength = teldb[name]
         self.diameter = diameter
@@ -110,11 +112,54 @@ class telescope(object):
         return 2.44*wavelength*self.focalratio()
     
     def fieldofview(self, detector):
-        """retursn the angular field of view of a detector on the telescope"""
+        """returns the angular field of view of a detector on the telescope"""
         from math import atan
         return 2.*atan(detector.diameter/(2.*self.focallength))
         
     def resolution(self, wavelength=550e-9):
         """returns the angular resolution in radians"""
         return 1.02*wavelength/self.diameter
+    
+    def magnification(self, minpupil=0.001, maxpupil=0.0075):
+        """returns the minimum and the maximum magnifications"""
+        return (self.diameter/maxpupil, self.diameter/minpupil)    
+ 
+class Eyepiece(object):
+    def __init__(self, focallength, fov):
+        """
+        focal length in meters
+        fov in degrees
+        """
+        self.focallength = focallength
+        self.fov = fov
+    
+    def magnification(self, telescope):
+        return telescope.focallength/self.focallength
+    
+    def exitpupil(self, telescope):
+        return telescope.diameter/self.magnification(telescope)
+    
+    def truefov(self, telescope):
+        return self.fov/self.magnification(telescope)
+
+if __name__ == '__main__':
+    c11 = Telescope(0.0, 0.0, name='C11')
+    minmag, maxmag = c11.magnification(maxpupil = 0.007)
+    print 'C11:'
+    print '%i ... %i' % (minmag,maxmag)
+    print 'ideal: %i mm' % (1000.0*c11.focallength/60.0)
+    print 1000.0*c11.focallength/minmag, 1000.0*c11.focallength/maxmag, 'mm'
+    
+    print 'Cassegrain 50:'
+    zeiss50 = Telescope(0.0, 0.0, name='Cassegrain50')
+    maxmag = zeiss50.magnification()[1]
+    print 'ideal: %i mm' % (1000.0*zeiss50.focallength/60.0)
+    print 1000.0*zeiss50.focallength/maxmag, 'mm'
+    
+    print 'Meade 8":'
+    meade = Telescope(0.2, 1.2)
+    minmag, maxmag = meade.magnification(maxpupil = 0.007)
+    print '%i ... %i' % (minmag,maxmag)
+    print 'ideal: %i mm' % (1000.0*meade.focallength/60.0)
+    print 1000.0*meade.focallength/minmag, 1000.0*meade.focallength/maxmag, 'mm'
     
