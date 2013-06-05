@@ -34,29 +34,40 @@ def bc(Teff):
     logT4 = log10(Teff)-4.0
     return -8.499*logT4**4 + 13.421*logT4**3 - 8.131*logT4**2 - 3.901*logT4 - 0.438
 
+r_sun = 6.96342e8
+m_sun = 1.9891e30
+
 class Star(object):
     def __init__(self, mass = 1.9891e30):
         """creates a star with given mass in kg. If mass is less then 50 then
         solar masses as units are assumed"""
         self.mass = mass # kg
-        r_sun = 6.96342e8
-        m_sun = 1.9891e30
         if mass<=50:
             mass *=m_sun
             self.mass = mass
-        if mass<=2*m_sun:
-            self.radius = r_sun*(mass/m_sun)**0.9
-        if mass>2*m_sun and mass<20*m_sun:
-            self.radius = r_sun*(mass/m_sun)**(15/19)
-        #self.radius = 6.96342e8 # meters
+        #if mass<=2*m_sun:
+        #    self.radius = r_sun*(mass/m_sun)**0.9
+        #if mass>2*m_sun and mass<20*m_sun:
+        #    self.radius = r_sun*(mass/m_sun)**(15/19)
+    def get_radius(self):
+        if self.mass<=2*m_sun:
+            self._radius = r_sun*(self.mass/m_sun)**0.9
+        if self.mass>2*m_sun and self.mass<20*m_sun:
+            self._radius = r_sun*(self.mass/m_sun)**(15/19)
+        return self._radius
     
+    #@radius.setter
+    def set_radius(self, value):
+        self._radius = value
+        self.mass = m_sun*(self._radius/r_sun)**(19/15)
+        
+    radius = property(get_radius, set_radius)
+        
     def luminosity(self):
         """returns the luminosity in Watts
         taken from:
         http://physics.ucsd.edu/students/courses/winter2008/managed/physics223/documents/Lecture7%13Part3.pdf
         """
-        r_sun = 6.96342e8
-        m_sun = 1.9891e30
         l_sun = 3.846e26 # [W] 
         if self.mass>=2*m_sun and self.mass<20*m_sun:
             return l_sun*(self.mass/m_sun)**3
