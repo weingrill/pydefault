@@ -3,7 +3,6 @@ Created on Apr 17, 2013
 
 @author: jwe <jweingrill@aip.de>
 '''
-
 class DataSource(object):
     def __init__(self, database, user, host):
         """Constructor: opens database on host using username"""
@@ -46,9 +45,17 @@ class DataSource(object):
     def __exit__(self):
         """proxy function to close database"""
         self.close()
-        
+       
     def close(self):
         """closes the database"""
         if self.database:
             self.database.close()  
+
+class Table(object):
+    def __init__(self, name, datasource):
+        self.name = name
+        self.datasource = datasource
+    
+    def column(self, colname):
+        return self.datasource.query('SELECT '+colname+' FROM TABLE '+self.name)
         
