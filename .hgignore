@@ -8,3 +8,5 @@ glob:healthvsexpense.png
 glob:histogram.pdf
 glob:multipage_pdf.pdf
 glob:.settings/*
+glob:.project
+glob:.pydevproject
