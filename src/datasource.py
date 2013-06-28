@@ -4,13 +4,17 @@ Created on Apr 17, 2013
 @author: jwe <jweingrill@aip.de>
 '''
 class DataSource(object):
-    def __init__(self, database, user, host):
+    def __init__(self, database, user, host, dictcursor=False):
         """Constructor: opens database on host using username"""
         import psycopg2
+        
         try:
             self.database = psycopg2.connect(database=database, user=user, host=host) 
         finally:
-            self.cursor = self.database.cursor()
+            if dictcursor:
+                self.cursor = self.database.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            else:
+                self.cursor = self.database.cursor()
     
     def query(self, querystring):
         """executes a query and returns result"""

@@ -67,10 +67,11 @@ def dd2dms(degrees):
 def dd2hms(degrees):
     """convert degrees to hours, minutes, seconds"""
     from math import trunc
-    hours = trunc(degrees/15.)
-    h = trunc(hours)
-    m = trunc((hours-h)*60.)
-    s = ((hours-h)*60.-m)*60. 
+    h = trunc(degrees/15.)
+    frac_hours = degrees/15. - h
+    m = trunc(frac_hours*60.)
+    frac_minutes=(frac_hours)*60. - m
+    s = frac_minutes*60. 
     return (h,m,s)
 
 def mjd(datetime):
