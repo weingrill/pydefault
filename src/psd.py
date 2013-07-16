@@ -27,7 +27,7 @@ def _worker(wi):
 
 def ppsd(t, y):
     from multiprocessing import Pool
-    from numpy import linspace
+    from numpy import linspace, pi
 
     N = len(y)
     w = 2.0*pi*linspace(0.001, 0.5, N)
