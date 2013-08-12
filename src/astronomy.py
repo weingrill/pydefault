@@ -50,10 +50,14 @@ def jd(datetime):
 
 def hms2dd(hms):
     """convert hours, minutes seconds to degrees"""
+    if type(hms) == str:
+        hms = s.split(':')
     return ((float(hms[0]) + float(hms[1])/60. + float(hms[2])/3600.)*15.)
 
 def dms2dd(dms):
     """convert degrees, minutes seconds to degrees"""
+    if type(dms) == str:
+        dms = s.split(':')
     return (float(dms[0]) + float(dms[1])/60. + float(dms[2])/3600.)
 
 def dd2dms(degrees):
