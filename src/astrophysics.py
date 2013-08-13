@@ -76,7 +76,7 @@ class Star(object):
             return l_sun*(self.mass/m_sun)**5.5/(self.radius/r_sun)**0.5
     
     def surface_gravity(self):
-        """surface gravity of the star"""
+        """surface gravity of the star in meters per socond squared"""
         f = 6.673e-11 # gravitational constant [m**3 kg**-1 s**-2]
         return f*self.mass/self.radius**2 # [m s**-2]
     
