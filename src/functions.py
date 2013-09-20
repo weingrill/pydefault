@@ -11,7 +11,8 @@ def gaussian(x, mu = 0.0, sigma = 1.0):
 
 def scaleto(values, bounds, k=None, d=None):
     """scales values within bounds"""
-    x1, x2 = min(values),max(values)
+    import numpy as np
+    x1, x2 = np.min(values),np.max(values)
     y1, y2 = bounds[0], bounds[1]
     if k is None:
         k =  (y2 - y1)/(x2 - x1)
@@ -19,7 +20,7 @@ def scaleto(values, bounds, k=None, d=None):
         d = y1 - k*x1
     return k*values + d
 
-def histeq(im,nbr_bins=256):
+def histeq(im, nbr_bins=256):
     """http://www.janeriksolem.net/2009/06/histogram-equalization-with-python-and.html"""
     #get image histogram
     imhist,bins = histogram(im.flatten(),nbr_bins,normed=True)
