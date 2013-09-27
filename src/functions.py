@@ -31,3 +31,11 @@ def histeq(im, nbr_bins=256):
     im2 = interp(im.flatten(),bins[:-1],cdf)
 
     return im2.reshape(im.shape), cdf
+
+def sign(number):
+    if number>0:
+        return 1
+    elif number<0:
+        return -1
+    elif number==0:
+        return 0

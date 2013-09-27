@@ -55,7 +55,9 @@ def hms2dd(hms):
             hms = hms.split(':')
         else:
             hms = hms.split(' ')
-    return ((float(hms[0]) + float(hms[1])/60. + float(hms[2])/3600.)*15.)
+    hms = [float(h) for h in hms]
+    if len(hms)==2: hms.append(0.0)
+    return (abs(hms[0]) + hms[1]/60. + hms[2]/3600.)*15.
 
 def hms2hh(hms):
     """convert hours, minutes seconds to decimal hours"""
@@ -64,17 +66,22 @@ def hms2hh(hms):
             hms = hms.split(':')
         else:
             hms = hms.split(' ')
-    return (float(hms[0]) + float(hms[1])/60. + float(hms[2])/3600.)
+    hms = [float(h) for h in hms]
+    if len(hms)==2: hms.append(0.0)
+    return (hms[0] + hms[1]/60. + hms[2]/3600.)
 
 
 def dms2dd(dms):
     """convert degrees, minutes seconds to degrees"""
+    from functions import sign
     if type(dms) == str:
         if dms.find(':')>0: 
             dms = dms.split(':')
         else:
             dms = dms.split(' ')
-    return (float(dms[0]) + float(dms[1])/60. + float(dms[2])/3600.)
+    dms = [float(d) for d in dms]
+    if len(dms)==2: dms.append(0.0)
+    return sign(dms[0])*(abs(dms[0]) + dms[1]/60. + dms[2]/3600.)
 
 def dd2dms(degrees):
     """convert degrees to degrees, minutes, seconds"""
