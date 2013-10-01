@@ -33,9 +33,16 @@ def histeq(im, nbr_bins=256):
     return im2.reshape(im.shape), cdf
 
 def sign(number):
+    """returns the sign of a given number"""
     if number>0:
         return 1
     elif number<0:
         return -1
     elif number==0:
         return 0
+    
+def rms(values):
+    """returns the root mean square of values"""
+    from numpy import mean, sqrt
+    return sqrt(mean(values**2))
+
