@@ -42,24 +42,25 @@ class Star(object):
         """creates a star with given mass in kg. If mass is less then 50 then
         solar masses as units are assumed"""
         self.mass = mass # kg
-        if mass<=50:
+        if mass<=50.0:
             mass *=m_sun
             self.mass = mass
         #if mass<=2*m_sun:
         #    self.radius = r_sun*(mass/m_sun)**0.9
         #if mass>2*m_sun and mass<20*m_sun:
         #    self.radius = r_sun*(mass/m_sun)**(15/19)
+    
     def get_radius(self):
         if self.mass<=2*m_sun:
             self._radius = r_sun*(self.mass/m_sun)**0.9
-        if self.mass>2*m_sun and self.mass<20*m_sun:
-            self._radius = r_sun*(self.mass/m_sun)**(15/19)
+        if self.mass>2*m_sun and self.mass<20.0*m_sun:
+            self._radius = r_sun*(self.mass/m_sun)**(15.0/19.0)
         return self._radius
     
     #@radius.setter
     def set_radius(self, value):
         self._radius = value
-        self.mass = m_sun*(self._radius/r_sun)**(19/15)
+        self.mass = m_sun*(self._radius/r_sun)**(19.0/1.0)
         
     radius = property(get_radius, set_radius)
         
@@ -70,7 +71,7 @@ class Star(object):
         """
         l_sun = 3.846e26 # [W] 
         if self.mass>=2*m_sun and self.mass<20*m_sun:
-            return l_sun*(self.mass/m_sun)**3
+            return l_sun*(self.mass/m_sun)**3.0
         
         if self.mass>=0.5*m_sun and self.mass<2*m_sun:
             return l_sun*(self.mass/m_sun)**5.5/(self.radius/r_sun)**0.5
