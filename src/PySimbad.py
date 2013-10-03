@@ -47,4 +47,12 @@ def simbad(psr):
 
 def SimbadCoord(psr):
     info = simbad(psr)
-    return info['Coordinates(FK5,ep=2000,eq=2000)']
+    #print info
+    try: 
+        coords = info['Coordinates(ICRS,ep=2000,eq=2000)']
+    except KeyError:
+        try:
+            coords = info['Coordinates(FK5,ep=J2000,eq=2000)']
+        except KeyError:
+            coords = info['Coordinates(FK4,ep=2000,eq=2000)']
+    return coords
