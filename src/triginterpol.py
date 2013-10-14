@@ -22,21 +22,22 @@ def interpol(x, y, u):
 
 class interp1d(object):
     def __call__(self, x_new):
-        
+        import numpy as np
+       
         x_new = np.array(x_new)
         y_new = np.empty(len(x_new))
         i = 0
         for u in x_new:
             p = 0.0
-            n = range(len(x))
+            n = range(len(self.x))
             for k in n:
                 f = 1.0;
                 for m in n:
                     if m<>k:
-                        s = np.sin(0.25*(u   -x[m])/np.pi);
-                        s = s/np.sin(0.25*(x[k]-x[m])/np.pi);
+                        s = np.sin(0.25*(u   -self.x[m])/np.pi);
+                        s = s/np.sin(0.25*(self.x[k]-self.x[m])/np.pi);
                         f *= s;
-                p += f*y[k];
+                p += f*self.y[k];
             y_new[i] = p
             i += 1
         return y_new
