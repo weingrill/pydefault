@@ -47,6 +47,40 @@ class interp1d(object):
         
         self.x = np.array(x)
         self.y = np.array(y)
+
+def _poolinit(argsx, argsy):
+    global px
+    global py
+    px = argsx
+    py = argsy
+    
+def _poolworker(u):
+    from numpy import pi, sin
+    
+    global px
+    global py
+    
+    p = 0.0
+    n = range(len(px))
+    fourpi = 4.0*pi
+    for k in n:
+        f = 1.0;
+        for m in n:
+            if m<>k:
+                f *= sin((u-px[m])/fourpi)/sin((px[k]-px[m])/fourpi);
+        p += f*py[k];
+    return p
+
+def tinterpol(x, y, x_new):
+    from multiprocessing import Pool
+
+    pool = Pool(initializer=_poolinit, initargs=(x, y))
+    y_new = pool.map(_poolworker, x_new)
+    pool.close() # no more tasks
+    pool.join()  # wrap up current tasks
+
+    return y_new
+
     
 if __name__ == '__main__':
     import numpy as np
@@ -58,5 +92,14 @@ if __name__ == '__main__':
     print 'u p(u) = %6.2f %10.2f' % (u, interpol(x, y, u))
     
     f = interp1d(x,y)
-    print f([3.0,4.0])
-    
+    x1 = [3.0,4.0]
+    y1 = f(x1)
+    x2 = np.linspace(-1.0,8.0, 20)
+    y2 =  tinterpol(x, y, x2)
+    import matplotlib
+    matplotlib.use('WXAgg')
+    import matplotlib.pyplot as plt
+    plt.scatter(x,y)
+    plt.scatter(x1,y1,c='g', marker='s')
+    plt.plot(x2, y2)
+    plt.show()

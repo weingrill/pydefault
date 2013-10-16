@@ -36,7 +36,7 @@ def ptest():
 
     w = 2.0*numpy.pi*numpy.linspace(0.001, 0.5, N)
     #print worker(w[2])
-    pool = Pool(6, initializer=init, initargs=(t,y))
+    pool = Pool(initializer=init, initargs=(t,y))
     roots = pool.map(worker, w)
     pool.close() # no more tasks
     pool.join()  # wrap up current tasks
