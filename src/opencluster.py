@@ -35,7 +35,7 @@ class OpenCluster(object):
                        'XOffCCD':0,
                        'YOffCCD':0,
                        'XSizeCCD':2050,
-                       'YSizeCCD':2050,
+                       'YSizeCCD':4100,
                        'XBinCCD':1,
                        'YBinCCD':1}
         self.sequence = {'sequence':'FullFilters',
