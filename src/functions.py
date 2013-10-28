@@ -44,5 +44,14 @@ def sign(number):
 def rms(values):
     """returns the root mean square of values"""
     from numpy import mean, sqrt
+    
     return sqrt(mean(values**2))
 
+def modulus(image):
+    """returns the modulus of an image,
+    which can be used as an estimate for the sky background"""
+    from numpy import histogram, argmax
+    
+    h, loc = histogram(image, bins=65536, range=[0,65535])
+    m = argmax(h)
+    return loc[m]
