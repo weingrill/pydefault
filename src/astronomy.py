@@ -17,6 +17,10 @@ def airmass(h):
     from numpy import sin, pi,array
     
     h = array(h)
+    if h.ndim==1:
+        h[h > 90.0] = 90.0
+        h[h < 0.0] = 0.0
+    
     #if min(h) < 0.0 or max(h) > 90.0:
     #    raise ValueError('h = %s must be in [0.,90.]' % h)
         
