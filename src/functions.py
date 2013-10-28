@@ -22,6 +22,8 @@ def scaleto(values, bounds, k=None, d=None):
 
 def histeq(im, nbr_bins=256):
     """http://www.janeriksolem.net/2009/06/histogram-equalization-with-python-and.html"""
+    from numpy import histogram, interp
+    
     #get image histogram
     imhist,bins = histogram(im.flatten(),nbr_bins,normed=True)
     cdf = imhist.cumsum() #cumulative distribution function
@@ -32,14 +34,13 @@ def histeq(im, nbr_bins=256):
 
     return im2.reshape(im.shape), cdf
 
-def sign(number):
-    """returns the sign of a given number"""
-    if number>0:
-        return 1
-    elif number<0:
-        return -1
-    elif number==0:
-        return 0
+def sign(x):
+    """returns the sign of a given number
+    http://stackoverflow.com/questions/1986152/
+    or use numpy.sign
+    """
+    from math import copysign
+    return copysign(1, x)
     
 def rms(values):
     """returns the root mean square of values"""
