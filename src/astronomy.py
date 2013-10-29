@@ -12,19 +12,36 @@ def now():
 def airmass(h):
     """
     calulates the airmass as a function of height h in degrees
-    taken fom Wikipedia
+    taken fom Wikipedia, Pickering (2002)
     """
     from numpy import sin, pi,array
     
     h = array(h)
+    if type(h)=='float':
+        if h < 0.0: h = 0.0
+        if h > 90.0: h = 90.0
     if h.ndim==1:
         h[h > 90.0] = 90.0
-        h[h < 0.0] = 0.0
+        h[h < 1.0] = 1.0
     
     #if min(h) < 0.0 or max(h) > 90.0:
     #    raise ValueError('h = %s must be in [0.,90.]' % h)
         
     return 1.0/sin((h + 244/(165 + 47*h**1.1))*pi/180)
+
+def height(a):
+    """
+    returns the height from a given airmass a,
+    since inversion of airmass function is difficult.
+    """
+    from scipy.optimize import newton
+    
+    if a>2.5:
+        return 20.0
+    def f(h, a):
+        return airmass(h) - a
+    return newton(f, x0=45.0, args=(a,), maxiter=50)
+    
 
 def mag_distance(d):
     """
