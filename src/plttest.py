@@ -35,6 +35,7 @@ y = -360.*t**2 + 360.*t
 y1 = 90.*sin(t*pi)
 ax1.plot(t, y)
 ax1.plot(t, y1, 'g')
+ax1.set_xlim(0,1)
 
 airmasses = array([1.0,1.1,1.2,1.3,1.4,1.5,2.0,3.0,4.0,5.0])
 heights = [height(am) for am in airmasses]
