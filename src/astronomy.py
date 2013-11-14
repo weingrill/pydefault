@@ -62,27 +62,33 @@ def mag_distance(d):
     from numpy import log10
     return 5.0*log10(d) - 5.0 + 4.83
     
-def jd(datetime):
-    """returns the Julian Day of a given time. 
-    datetime must be a datetime object"""
-    if datetime.month > 2:
-        y = datetime.year
-        m = datetime.month
+def jd(epoch):
+    """
+    returns the Julian Day of a given time. 
+    datetime must be a datetime object
+    """
+    import datetime
+    if not type(epoch) is datetime.datetime:
+        raise TypeError('datetime must be of type datetime')
+    
+    if epoch.month > 2:
+        y = epoch.year
+        m = epoch.month
     else:
-        y = datetime.year - 1
-        m = datetime.month + 12
-    d = datetime.day
-    h = datetime.hour/24. + datetime.min/1440. + datetime.sec/86400. # microsecond might be added here?
-    if [datetime.year,datetime.tm_mon,d] >= [1582,10,15]:
+        y = epoch.year - 1
+        m = epoch.month + 12
+    d = epoch.day
+    h = epoch.hour/24. + epoch.minute/1440. + epoch.second/86400. # microsecond might be added here?
+    if [epoch.year,epoch.month,d] >= [1582,10,15]:
         a = int(y/100)
         b = 2-a + int(a/4)
-    elif [datetime.year,datetime.month,d] <= [1582,10,4]:
+    elif [epoch.year,epoch.month,d] <= [1582,10,4]:
         b = 0
     return (int(365.25*(y+4716)) + int(30.6001*(m+1)) + d + h + b - 1524.5)
 
 def hms2dd(hms):
     """convert hours, minutes seconds to degrees"""
-    if type(hms) == str:
+    if type(hms) is str:
         if hms.find(':')>0: 
             hms = hms.split(':')
         else:
@@ -93,7 +99,7 @@ def hms2dd(hms):
 
 def hms2hh(hms):
     """convert hours, minutes seconds to decimal hours"""
-    if type(hms) == str:
+    if type(hms) is str:
         if hms.find(':')>0: 
             hms = hms.split(':')
         else:
@@ -106,7 +112,7 @@ def hms2hh(hms):
 def dms2dd(dms):
     """convert degrees, minutes seconds to degrees"""
     from functions import sign
-    if type(dms) == str:
+    if type(dms) is str:
         if dms.find(':')>0: 
             dms = dms.split(':')
         else:
@@ -314,3 +320,6 @@ class observer(object):
         t = (self.time - 2451545.0)/36525.
         return 280.46061837 + 360.98564736629*(self.time-2451545.0) + \
                0.000387933*t**2 - t**3/38710000.0
+if __name__ == '__main__':
+    print now()
+    print jd(now())
