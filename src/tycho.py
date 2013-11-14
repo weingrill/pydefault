@@ -16,6 +16,7 @@ def tycho(ra_center, dec_center, fov = 1.0, grid=True, background=True, show=Tru
          from tycho where circle(point(%f,%f),%f) @> circle(coord,0)
          and not bt-vt is null;""" % (ra_center, dec_center, fov)
     data = tycho.query(query)
+    print len(data)
     ra = array([float(d[0]) for d in data])
     dec = array([float(d[1]) for d in data])
     vmag = array([float(d[2]) for d in data])
@@ -39,4 +40,11 @@ def tycho(ra_center, dec_center, fov = 1.0, grid=True, background=True, show=Tru
 if __name__ == '__main__':
     import matplotlib
     matplotlib.use('WXAgg')
-    tycho(308.6083,28.2833)
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.set_aspect(1.)
+    tycho(114.145833333, -14.483, show=False) #-14.4833333333
+    xmin,xmax = plt.xlim()
+    plt.xlim(xmax,xmin)
+    plt.show()
