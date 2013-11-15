@@ -64,31 +64,31 @@ class OpenCluster(object):
             self.mode['mode'] = 'BlockedPerNight'
             self.mode['maxobservations'] = 20
             self.mode['pernight'] = 2 
-            self.mode['timeout'] = 3600000
+            self.mode['timeout'] = self.timeout
             self.mode['jd0'] = 2456609.0
             self.mode['zero'] = 180.0
 
         if obsmode == 'bvsl20':
             self.sequence['ExposureTime'] = 20.0 # 20.0 + 200.0
-            self.sequence['ExposureRepeat'] = 20
-            self.sequence['ExposureIncrease'] = '5*1,5*3,5*10,5*10'
-            self.sequence['FilterSequence'] = '5*V,5*B,5*V,5*B'
+            self.sequence['ExposureRepeat'] = 12
+            self.sequence['ExposureIncrease'] = '3*1,3*3,3*10,3*10'
+            self.sequence['FilterSequence'] = '3*V,3*B,3*V,3*B'
             self.mode['mode'] = 'BlockedPerNight'
             self.mode['maxobservations'] = 20
             self.mode['pernight'] = 2 
-            self.mode['timeout'] = 3600000
+            self.mode['timeout'] = self.timeout
             self.mode['jd0'] = 2456609.0
             self.mode['zero'] = 180.0
 
         if obsmode == 'bvsl30':
             self.sequence['ExposureTime'] = 30.0 # 30.0 + 300.0
-            self.sequence['ExposureRepeat'] = 20
-            self.sequence['ExposureIncrease'] = '5*1,5*3,5*10,5*10'
-            self.sequence['FilterSequence'] = '5*V,5*B,5*V,5*B'
+            self.sequence['ExposureRepeat'] = 12
+            self.sequence['ExposureIncrease'] = '3*1,3*3,3*10,3*10'
+            self.sequence['FilterSequence'] = '3*V,3*B,3*V,3*B'
             self.mode['mode'] = 'BlockedPerNight'
             self.mode['maxobservations'] = 20
             self.mode['pernight'] = 2 
-            self.mode['timeout'] = 3600000
+            self.mode['timeout'] = self.timeout
             self.mode['jd0'] = 2456609.0
             self.mode['zero'] = 180.0
 
@@ -100,7 +100,7 @@ class OpenCluster(object):
             self.mode['mode'] = 'BlockedPerNight'
             self.mode['maxobservations'] = 20
             self.mode['pernight'] = 2 
-            self.mode['timeout'] = 3600000
+            self.mode['timeout'] = self.timeout
             self.mode['jd0'] = 2456609.0
             self.mode['zero'] = 180.0
 
@@ -110,7 +110,7 @@ class OpenCluster(object):
             self.sequence['ExposureIncrease'] = '1,10'
             self.sequence['FilterSequence'] = 'V,V'
             self.mode['mode'] = 'FewPerNight'
-            self.mode['timeout'] = 1320000 # duration*fields*1000
+            self.mode['timeout'] = self.timeout # duration*fields*1000
             self.mode['pernight'] = 10 # can be refined
             self.mode['impact'] = 0.5
         
@@ -142,6 +142,7 @@ class OpenCluster(object):
         """
         returns new subframes
         """
+        self.fields = nfields
         d = 1320.2/3600.0 # 1320.2arcsec is the fov of WiFSIP
         d2 = d/2
         cra, cdec = self.object['RA'],self.object['Dec']
@@ -152,7 +153,7 @@ class OpenCluster(object):
                  (cra - d2, cdec - d2),
                  (cra + d2, cdec - d2)]
         if nfields == 5:
-            names = ['center','NW','NE','SW','SE']
+            names = ['C','NW','NE','SW','SE']
             fields = [(cra    , cdec),
                  (cra - d2, cdec + d2),
                  (cra + d2, cdec + d2),
@@ -167,6 +168,7 @@ class OpenCluster(object):
                                          ra = f[0], dec = f[1]))
         #do some deep copy of the object:
         for sf in subframes:
+            sf.fields = self.fields
             sf.startdate = self.startdate
             sf.enddate = self.enddate
             sf.telescope = self.telescope
@@ -223,7 +225,12 @@ class OpenCluster(object):
                 
         self.sequence['ExposureRepeat'] = repeat
         return duration
-        
+    
+    @property
+    def timeout(self):
+        """calculate timeout"""
+        return self.duration * self.fields * 1000.0
+    
     def tofile(self, path = './'):
         """
         stores the data to a save file
@@ -258,14 +265,14 @@ class OpenCluster(object):
         f.write('team=%s\n' % self.team)
         f.write('mode=%s\n' % self.mode['mode'])
         if self.mode['mode']=='FewPerNight':
-            f.write('mode.timeout=%d\n' % self.mode['timeout'])
+            f.write('mode.timeout=%d\n' % self.timeout)
             f.write('mode.pernight=%d\n' % self.mode['pernight'])
             f.write('mode.impact=%.1f\n' % self.mode['impact'])
             
         if self.mode['mode']=='BlockedPerNight':
             f.write('mode.maxobservations=%d\n' % self.mode['maxobservations'])
             f.write('mode.pernight=%d\n' % self.mode['pernight'])
-            f.write('mode.timeout=%d\n' % self.mode['timeout'])
+            f.write('mode.timeout=%d\n' % self.timeout)
             f.write('mode.jd0=%.1f\n' % self.mode['jd0'])
             f.write('mode.zero=%.1f\n' % self.mode['zero'])
             
