@@ -16,7 +16,6 @@ def tycho(ra_center, dec_center, fov = 1.0, grid=True, background=True, show=Tru
          from tycho where circle(point(%f,%f),%f) @> circle(coord,0)
          and not bt-vt is null;""" % (ra_center, dec_center, fov)
     data = tycho.query(query)
-    print len(data)
     ra = array([float(d[0]) for d in data])
     dec = array([float(d[1]) for d in data])
     vmag = array([float(d[2]) for d in data])
