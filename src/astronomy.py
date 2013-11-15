@@ -66,25 +66,26 @@ def jd(epoch):
     """
     returns the Julian Day of a given time. 
     datetime must be a datetime object
+    http://en.wikipedia.org/wiki/Julian_day
     """
+    
     import datetime
+    from math import floor
     if not type(epoch) is datetime.datetime:
         raise TypeError('datetime must be of type datetime')
     
-    if epoch.month > 2:
-        y = epoch.year
-        m = epoch.month
-    else:
-        y = epoch.year - 1
-        m = epoch.month + 12
+    a = floor((14 - epoch.month)/12)
+    y = epoch.year + 4800 - a
+    m = epoch.month + 12*a - 3
+    
     d = epoch.day
     h = epoch.hour/24. + epoch.minute/1440. + epoch.second/86400. # microsecond might be added here?
+    
     if [epoch.year,epoch.month,d] >= [1582,10,15]:
-        a = int(y/100)
-        b = 2-a + int(a/4)
+        jdn = epoch.day + floor((153*m + 2)/5) + 365*y + floor(y/4) - floor(y/100) + floor(y/400) - 32045
     elif [epoch.year,epoch.month,d] <= [1582,10,4]:
-        b = 0
-    return (int(365.25*(y+4716)) + int(30.6001*(m+1)) + d + h + b - 1524.5)
+        jdn = epoch.day + floor((153*m + 2)/5) + 365*y + floor(y/4) - 32083
+    return jdn + (epoch.hour-12)/24. + epoch.minute/1440. + epoch.second/86400.
 
 def hms2dd(hms):
     """convert hours, minutes seconds to degrees"""
