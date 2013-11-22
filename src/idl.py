@@ -5,9 +5,12 @@ Created on Jan 28, 2013
 
 See /usr/local/itt/idl71/lib for details
 
-Copyright (c) 1995-2009, ITT Visual Information Solutions. All
-       rights reserved. Unauthorized reproduction is prohibited.
+
 '''
+def asin(x):
+    from numpy import arcsin
+    return arcsin(x)
+
 def shift(x, d):
     from numpy import roll
     return roll(x, d)
