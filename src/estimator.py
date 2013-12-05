@@ -32,4 +32,4 @@ class Estimator(object):
         mins =  int((togo % 3600) // 60)
         secs = (togo % 3600) % 60
         togostr = '%02d:%02d:%04.1f' % ( hours, mins, secs)
-        print "%.2f%%, %.3fs/item, %s: %s" % (percent, perfile, togostr, comment)
+        print "%5.2f%%, %.3fs/item, %s: %s" % (percent, perfile, togostr, comment)
