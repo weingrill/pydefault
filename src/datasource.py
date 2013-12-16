@@ -21,12 +21,13 @@ class DataSource(object):
         self.cursor.execute(querystring)
         return self.cursor.fetchall()
 
-    def execute(self, query):
+    def execute(self, query, commit=True):
         """executes a query"""
         try:
             self.cursor.execute(query)
         finally:
-            self.database.commit()
+            if commit:
+                self.database.commit()
     
     def truncate(self, table):
         """truncates a table"""

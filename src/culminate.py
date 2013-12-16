@@ -35,14 +35,16 @@ if __name__ == '__main__':
     from datetime import timedelta
     
     izana = ephem.Observer()
-    date = ephem.Date('2014/01/01 12:00:00')
+    date = ephem.Date('2013/12/31 12:00:00')
     izana.date = '2013/03/15'
     izana.lat = '28.301195'
     izana.lon = '-16.509209'
+    sun = ephem.Sun()
+        
     for i in range(365):
         newdate = date + i
         izana.date = newdate
-        sun = ephem.Sun()
+        sun.compute(izana)
         at = izana.next_antitransit(sun)
         #print at, izana.next_transit(sun)
         izana.date = at 
