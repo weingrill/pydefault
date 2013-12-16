@@ -39,6 +39,7 @@ def sign(x):
     http://stackoverflow.com/questions/1986152/
     or use numpy.sign
     """
+    #TODO: raise depreciation warning
     from math import copysign
     return copysign(1, x)
     
