@@ -103,10 +103,12 @@ def _worker(period):
     return theta(p[indi], mag_global[indi], bbegin, bend)
 
 
-def pdm(time, mag, minperiod, maxperiod, delta, nbins):
+def pdm(time, mag, minperiod, maxperiod, delta, nbins=None):
     """phase dispesion minimization"""
     import numpy as np
-
+    
+    if nbins is None:
+        nbins = int(np.sqrt(len(time)))
     periods = np.linspace(minperiod, maxperiod, (maxperiod-minperiod)/delta)
     
     
