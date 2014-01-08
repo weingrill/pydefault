@@ -57,3 +57,10 @@ def modulus(image):
     h, loc = histogram(image, bins=65536, range=[0,65535])
     m = argmax(h)
     return loc[m]
+
+def logspace(lower, upper, number):
+    """returns true logarithmic spacing between lower and upper
+    instead of numpy version"""
+    import numpy as np
+    result = np.logspace(0.0, 1.0, number)
+    return scaleto(result, [lower, upper])

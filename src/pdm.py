@@ -104,12 +104,23 @@ def _worker(period):
 
 
 def pdm(time, mag, minperiod, maxperiod, delta, nbins=None):
-    """phase dispesion minimization"""
+    """
+    phase dispersion minimization algorithm
+    
+    minimizes the binned and phased data of a time series given 
+    by time and mag. periods are searched within minperiod and maxperiod 
+    with the timestep delta.
+    
+    if nbins is not set the squareroot of datapoints is used for the 
+    number of bins.
+    
+    the periods and their respective theta values are returned
+    """
     import numpy as np
     
     if nbins is None:
         nbins = int(np.sqrt(len(time)))
-    periods = np.linspace(minperiod, maxperiod, (maxperiod-minperiod)/delta)
+    periods = np.arange(minperiod, maxperiod, delta)
     
     
     from multiprocessing import Pool

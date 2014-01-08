@@ -49,15 +49,14 @@ def lsqspectrum(t, data, limit=100, residual=None):
             err = np.sqrt(cov[1,1])
         except TypeError:
             err = p1[1]
-        #print '%7.4f %.4f %.1f' % (p1[1], p1[0], fa/sigma)
         if success and p1[1]>err:
-            print '%7.4f %.4f!' % (p1[1], err)
+            #print '%7.4f %.4f!' % (p1[1], err)
             amplitudes.append(abs(p1[0]))
             periods.append(p1[1])
             phases.append(p1[2])
         else:
             k -= 1
-            print '%7.4f %.4f' % (p1[1], err)
+            #print '%7.4f %.4f' % (p1[1], err)
         amp, freq, phase = calc_ft(t, residual)
         i = np.argmax(amp[:n/2-1])
         fa = amp[i]
