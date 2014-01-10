@@ -3,7 +3,7 @@ Created on Dec 2, 2013
 
 @author: jwe
 '''
-def lsqspectrum(t, data, limit=100, residual=None):
+def lsqspectrum(t, data, limit=100):
     """
     compute the least-sqares-spectrum of a given dataset
     """
@@ -21,32 +21,40 @@ def lsqspectrum(t, data, limit=100, residual=None):
     
     residual = data
     
-    amp,freq,phase = calc_ft(t, residual)
+    amp, freq, phase = calc_ft(t, residual)
     i = np.argmax(amp[:n/2-1])
     fa = amp[i]
     fp = 1./freq[i]
     sigma = np.std(amp[:n/2-1])
     
     fitfunc = lambda p, x: p[0]*np.cos(2*np.pi/p[1]*x+p[2])
-    errfunc = lambda p, x, y: y - fitfunc(p, x) # Distance to the target function
+    # Distance to the target function
+    errfunc = lambda p, x, y: y - fitfunc(p, x)
 
     success = 1
     k = 0
     amplitudes = []
     periods = []
     phases = []
+    amplitude_errors = []
+    period_errors = []
     
     while fa>3.0*sigma and success==1 and k<limit:
         p0 = [fa, fp, phase[i]] # Initial guess for the parameters
         
-        p1, cov, _, _, success = optimize.leastsq(errfunc, p0[:], args=(t, residual), full_output=1)
+        p1, cov, _, _, success = optimize.leastsq(errfunc, 
+                                                  p0[:], 
+                                                  args=(t, residual), 
+                                                  full_output=1)
         residual = residual - fitfunc(p1, t)
         if p1[0]<0.0:
             p1[0] = -p1[0]
             p1[2]= np.pi + p1[2]
         p1[2] = p1[2] % 2.0*np.pi
         try:
+            #calculate error in period
             err = np.sqrt(cov[1,1])
+            aerr = np.sqrt(cov[0,0])
         except TypeError:
             err = p1[1]
         if success and p1[1]>err:
@@ -54,6 +62,9 @@ def lsqspectrum(t, data, limit=100, residual=None):
             amplitudes.append(abs(p1[0]))
             periods.append(p1[1])
             phases.append(p1[2])
+            amplitude_errors.append(aerr)
+            period_errors.append(err)
+            
         else:
             k -= 1
             #print '%7.4f %.4f' % (p1[1], err)
@@ -66,8 +77,7 @@ def lsqspectrum(t, data, limit=100, residual=None):
             fp = 1./freq[i+1]
         sigma = np.std(amp[:n/2-1])
         k += 1
-    return (amplitudes, periods, phases, residual)
+    return (amplitudes, periods, phases, 
+            amplitude_errors, period_errors, 
+            residual)
 
-    
-    
-    
