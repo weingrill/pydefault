@@ -27,9 +27,7 @@ def lsqspectrum(t, data, limit=100):
     fp = 1./freq[i]
     sigma = np.std(amp[:n/2-1])
     
-    fitfunc = lambda p, x: p[0]*np.cos(2*np.pi/p[1]*x+p[2])
-    # Distance to the target function
-    errfunc = lambda p, x, y: y - fitfunc(p, x)
+    func = lambda x, a, p, pha: a*np.cos(2*np.pi/p*x+pha)
 
     success = 1
     k = 0
@@ -41,12 +39,9 @@ def lsqspectrum(t, data, limit=100):
     
     while fa>3.0*sigma and success==1 and k<limit:
         p0 = [fa, fp, phase[i]] # Initial guess for the parameters
-        
-        p1, cov, _, _, success = optimize.leastsq(errfunc, 
-                                                  p0[:], 
-                                                  args=(t, residual), 
-                                                  full_output=1)
-        residual = residual - fitfunc(p1, t)
+        p1, cov = optimize.curve_fit(func, t, residual, p0=p0)
+
+        residual = residual - func(t, p1[0], p1[1], p1[2])
         if p1[0]<0.0:
             p1[0] = -p1[0]
             p1[2]= np.pi + p1[2]
@@ -57,7 +52,7 @@ def lsqspectrum(t, data, limit=100):
             aerr = np.sqrt(cov[0,0])
         except TypeError:
             err = p1[1]
-        if success and p1[1]>err:
+        if p1[1]>err:
             #print '%7.4f %.4f!' % (p1[1], err)
             amplitudes.append(abs(p1[0]))
             periods.append(p1[1])
