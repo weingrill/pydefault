@@ -3,6 +3,8 @@ Created on Nov 14, 2013
 
 @author: jweingrill@aip.de
 
+Calculates the culmination of an object in Tenerife
+
 http://www.iceinspace.com.au/forum/showthread.php?t=66580
 
 The approx. RA at midnight on the 21st of the month is:
