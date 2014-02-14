@@ -56,6 +56,13 @@ class OpenCluster(object):
         self._duration = 0
         self.fields = 1
 
+        from astronomy import jd
+        # dirty import
+        import datetime
+        #take the current date as the start of the observation
+        jd0 = jd(datetime.datetime.now())
+        #self.mode['jd0'] = jd0
+
         if obsmode == 'bv':
             self.sequence['ExposureTime'] = 30.0
             self.sequence['ExposureRepeat'] = 12
@@ -65,8 +72,8 @@ class OpenCluster(object):
             self.mode['maxobservations'] = 20
             self.mode['pernight'] = 2 
             self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = 2456609.0
-            self.mode['zero'] = 180.0
+            self.mode['jd0'] = jd0
+            self.mode['zero'] = 180.0 # maximum observing season = half a year
 
         if obsmode == 'bvsl20':
             self.sequence['ExposureTime'] = 20.0 # 20.0 + 200.0
@@ -77,7 +84,7 @@ class OpenCluster(object):
             self.mode['maxobservations'] = 20
             self.mode['pernight'] = 2 
             self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = 2456609.0
+            self.mode['jd0'] = jd0
             self.mode['zero'] = 180.0
 
         if obsmode == 'bvsl30':
@@ -89,7 +96,7 @@ class OpenCluster(object):
             self.mode['maxobservations'] = 20
             self.mode['pernight'] = 2 
             self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = 2456609.0
+            self.mode['jd0'] = jd0
             self.mode['zero'] = 180.0
 
         if obsmode == 'bvi':
@@ -101,7 +108,43 @@ class OpenCluster(object):
             self.mode['maxobservations'] = 20
             self.mode['pernight'] = 2 
             self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = 2456609.0
+            self.mode['jd0'] = jd0
+            self.mode['zero'] = 180.0
+
+        if obsmode == 'bvisl':
+            self.sequence['ExposureTime'] = 20.0 
+            self.sequence['ExposureRepeat'] = 18
+            self.sequence['ExposureIncrease'] = '3*2,3*3,3*6,3*10,3*15,3*30'
+            self.sequence['FilterSequence'] = '3*I,3*V,3*B,3*I,3*V,3*B'
+            self.mode['mode'] = 'BlockedPerNight'
+            self.mode['maxobservations'] = 20
+            self.mode['pernight'] = 2 
+            self.mode['timeout'] = self.timeout
+            self.mode['jd0'] = jd0
+            self.mode['zero'] = 180.0
+
+        if obsmode == 'uvby':
+            self.sequence['ExposureTime'] = 60.0 
+            self.sequence['ExposureRepeat'] = 12
+            self.sequence['ExposureIncrease'] = '3*1,3*1.5,3*2,3*3'
+            self.sequence['FilterSequence'] = '3*y,3*b,3*v,3*u'
+            self.mode['mode'] = 'BlockedPerNight'
+            self.mode['maxobservations'] = 20
+            self.mode['pernight'] = 2 
+            self.mode['timeout'] = self.timeout
+            self.mode['jd0'] = jd0
+            self.mode['zero'] = 180.0
+
+        if obsmode == 'hahb':
+            self.sequence['ExposureTime'] = 60.0 
+            self.sequence['ExposureRepeat'] = 12
+            self.sequence['ExposureIncrease'] = '3*1,3*3,3*2,3*6'
+            self.sequence['FilterSequence'] = '3*hbw,3*hbn,3*haw,3*han'
+            self.mode['mode'] = 'BlockedPerNight'
+            self.mode['maxobservations'] = 20
+            self.mode['pernight'] = 2 
+            self.mode['timeout'] = self.timeout
+            self.mode['jd0'] = jd0
             self.mode['zero'] = 180.0
 
         if obsmode == 'rot':
@@ -113,7 +156,6 @@ class OpenCluster(object):
             self.mode['timeout'] = self.timeout # duration*fields*1000
             self.mode['pernight'] = 10 # can be refined
             self.mode['impact'] = 0.5
-        
         
         
         if self.object['RA'] is None or self.object['Dec'] is None:
@@ -222,7 +264,8 @@ class OpenCluster(object):
             else:
                 repeat += 1
                 duration += expt*float(s)
-                
+        if self.sequence['ExposureRepeat']<>repeat:
+            print "Warning: ExposureRepeat different!"      
         self.sequence['ExposureRepeat'] = repeat
         return duration
     
@@ -238,6 +281,7 @@ class OpenCluster(object):
         #ngc6940_sw_bvi_20130926.save
         import os
         from datetime import date, datetime
+        import time
         self.file = self.uname.lower().replace(' ','_')+'.xml'
         filename, ext =  os.path.splitext(self.file)
         todaystr = date.strftime(date.today(),'%Y%m%d')
@@ -299,6 +343,7 @@ class OpenCluster(object):
         f.write('file=%s\n' % self.file)
         f.write('duration=%d\n' % self.duration)
         f.flush()
+        time.sleep(1) # otherwise submit.jnlp gets confused
         f.close()
 
         fin = open(self.filename, 'rt')
@@ -309,9 +354,9 @@ class OpenCluster(object):
         """
         loads the data from a save file
         """
-        f = open(filename, 'rt')
+        f = open(self.filename, 'rt')
         lines = f.readlines()
-        f.close
+        f.close()
         #TODO: processing of lines
         
     def transfer(self, target='sro@stella:/stella/home/www/uploads/weingrill/save/'):
@@ -338,8 +383,7 @@ class OpenCluster(object):
               show=False)
 
 def do_ngc2281():
-    import time
-
+    
     ngc2281 = OpenCluster(objectname='NGC 2281', uname='NGC 2281 rot', obsmode='rot')           
     ngc2281_subframes = ngc2281.plan_wifsip(nfields=5)
     import matplotlib.pyplot as plt
@@ -350,7 +394,6 @@ def do_ngc2281():
         print sf.uname
         sf.plot()
         sf.tycho()
-        time.sleep(1) # otherwise submit.jnlp gets confused
         sf.tofile('/home/jwe/')
         sf.transfer()
     xmin,xmax = plt.xlim()
@@ -358,7 +401,6 @@ def do_ngc2281():
     plt.show()
 
 def do_ngc1674():
-    import time
 
     ngc2281 = OpenCluster(objectname='NGC 1647', uname='NGC 1647 bv', obsmode='bv')           
     ngc2281_subframes = ngc2281.plan_wifsip(nfields=5)
@@ -371,7 +413,7 @@ def do_ngc1674():
         print sf.uname
         sf.plot(ax)
         sf.tycho()
-        time.sleep(1) # otherwise submit.jnlp gets confused
+        
         sf.tofile('/home/jwe/')
         sf.transfer()
     xmin,xmax = plt.xlim()
@@ -379,12 +421,10 @@ def do_ngc1674():
     plt.show()
 
 def do_ngc2281center():
-    import time
 
     ngc2281 = OpenCluster(objectname='NGC 2281', uname='NGC 2281 BV center', obsmode='bvsl20')           
     ngc2281.plot()
     ngc2281.tycho()
-    time.sleep(1) # otherwise submit.jnlp gets confused
     ngc2281.tofile('/home/jwe/')
     ngc2281.transfer()
     xmin,xmax = plt.xlim()
