@@ -30,6 +30,8 @@ class OpenCluster(object):
         self.mode = {'mode':'FewPerNight',
                      'timeout':3600000,
                      'pernight':2,
+                     'period_day':0.25,
+                     'zerofraction':0.2,
                      'impact':1.0}
         self.camera = {'camera':'direct',
                        'XOffCCD':0,
@@ -150,12 +152,14 @@ class OpenCluster(object):
         if obsmode == 'rot':
             self.sequence['ExposureTime'] = 30.0
             self.sequence['ExposureRepeat'] = 2
-            self.sequence['ExposureIncrease'] = '1,10'
+            self.sequence['ExposureIncrease'] = '2,10'
             self.sequence['FilterSequence'] = 'V,V'
-            self.mode['mode'] = 'FewPerNight'
+            self.mode['mode'] = 'Clusters'
             self.mode['timeout'] = self.timeout # duration*fields*1000
-            self.mode['pernight'] = 10 # can be refined
-            self.mode['impact'] = 0.5
+            self.mode['pernight'] = 6 # can be refined
+            self.mode['period_day'] = 0.25
+            self.mode['zerofraction'] = 0.2
+            self.mode['impact'] = 1.0
         
         
         if self.object['RA'] is None or self.object['Dec'] is None:
@@ -319,6 +323,13 @@ class OpenCluster(object):
             f.write('mode.timeout=%d\n' % self.timeout)
             f.write('mode.jd0=%.1f\n' % self.mode['jd0'])
             f.write('mode.zero=%.1f\n' % self.mode['zero'])
+
+        if self.mode['mode']=='Clusters':
+            f.write('mode.timeout=%d\n' % self.timeout)
+            f.write('mode.pernight=%d\n' % self.mode['pernight'])
+            f.write('mode.period_day=%.2f\n' % self.mode['period_day'])
+            f.write('mode.zerofraction=%.1f\n' % self.mode['zerofraction'])
+            f.write('mode.impact=%.1f\n' % self.mode['impact'])
             
         f.write('camera=%s\n' % self.camera['camera'])
         f.write('camera.XOffCCD=%d\n' % self.camera['XOffCCD'])
