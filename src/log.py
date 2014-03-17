@@ -11,8 +11,9 @@ def log(logfile, logstring='', silent=False):
     try:
         f = open(logfile,'at')
         f.write('%s\t%s\n' % (now, logstring.rstrip('\n')))
-    finally:
         f.close()
+    except IOError:
+        print 'Can''t write logfile %s!' % logfile
     if not silent:
         print logstring    
     
