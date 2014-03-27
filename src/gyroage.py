@@ -71,26 +71,45 @@ def gyroage(bv, P, P0=1.1):
     t = (tau(bv)/k_C)*np.log(P/P0) + (0.5*k_I/tau(bv))*(P**2 - P0**2) 
     return t
 
-def gyroperiod(bv, age, P0=1.1):
+def gyroperiod(bv, age, P0=1.1, version=2010):
     """
     calculates the expected period according to the given age and color
     """
     from scipy.optimize import minimize
     import numpy as np
 
-    P = np.empty(len(bv))
+    if version == 2010:
+        P = np.empty(len(bv))
+        
+        def min_func(x, bv, age, P0):
+            return abs(gyroage(bv, x, P0) - age)
     
-    def min_func(x, bv, age, P0):
-        return abs(gyroage(bv, x, P0) - age)
+        x0 = 10.0
+        for i in range(len(bv)):
+            res = minimize(min_func, x0, method='nelder-mead', 
+                           args=(bv[i], age, P0),
+                           options={'xtol': 1e-3, 'disp': False})
+            P[i] = res['x'][0]
+        
+        return P
 
-    x0 = 10.0
-    for i in range(len(bv)):
-        res = minimize(min_func, x0, method='nelder-mead', 
-                       args=(bv[i], age, P0),
-                       options={'xtol': 1e-3, 'disp': False})
-        P[i] = res['x'][0]
+    if version == 2007:
+        """periods as a function of age and B-V from Barnes 2007"""
+        P = 0.7725*np.power(bv-0.4,0.601)*np.power(age, 0.5189)
+        
+        return P
     
-    return P
+    if version == 2003:
+        #eqns. 1 and 2 from Barnes 2003
+        pi = np.sqrt(age)*(np.sqrt(bv - 0.5) - 0.15*(bv - 0.5) )
+        pi[0] = 0.1
+        #eqn. 15 from Barnes 2003
+        pc=0.2*np.exp((age/100.0)/np.power(bv + 0.1 - (1.0/3000.)*age, 3.))
+        pc[pi<pc] = pi
+        
+        return pi, pc
+        
+
 
 if __name__ == '__main__':
     import matplotlib
