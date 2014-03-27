@@ -157,7 +157,7 @@ class OpenCluster(object):
             self.mode['mode'] = 'Clusters'
             self.mode['timeout'] = self.timeout # duration*fields*1000
             self.mode['pernight'] = 6 # can be refined
-            self.mode['period_day'] = 0.25
+            self.mode['period_day'] = 0.04 # was 0.25
             self.mode['zerofraction'] = 0.2
             self.mode['impact'] = 1.0
         
