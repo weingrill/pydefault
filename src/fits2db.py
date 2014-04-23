@@ -8,7 +8,7 @@ def fits2db(filename, relname, database='corot', user='sro', host='pina'):
     import pyfits
     import StringIO
     
-    ds = datasource(database, user, host)
+    ds = DataSource(database, user, host)
     hdulist = pyfits.open(filename)
         #hdr = hdulist[0].header
     tab = hdulist[1].data
