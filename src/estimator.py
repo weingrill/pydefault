@@ -4,7 +4,7 @@ Created on Jan 18, 2013
 @author: jwe
 '''
 
-from time import clock
+from time import time
 
 class Estimator(object):
     '''
@@ -18,10 +18,10 @@ class Estimator(object):
         '''
         self.firstitem = firstitem
         self.lastitem = lastitem
-        self.s0 = clock()
+        self.s0 = time()
     
     def estimate(self, current, comment=''):
-        s1 = clock()
+        s1 = time()
         if current < self.firstitem:
             self.firstitem = current  
         totalitems = self.lastitem - self.firstitem
