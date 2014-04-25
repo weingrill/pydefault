@@ -45,3 +45,35 @@ def log(logfile, logstring='', silent=False):
         print 'Can''t write logfile %s!' % logfile
     if not silent:
         print logstring    
+
+
+class Estimator(object):
+    '''
+    Estimator object to provide an estimate and a percentage of a process
+    '''
+
+
+    def __init__(self, firstitem, lastitem):
+        '''
+        Constructor
+        '''
+        from time import time
+        
+        self.firstitem = firstitem
+        self.lastitem = lastitem
+        self.s0 = time()
+    
+    def estimate(self, current, comment=''):
+        from time import time
+        s1 = time()
+        if current < self.firstitem:
+            self.firstitem = current  
+        totalitems = self.lastitem - self.firstitem
+        percent = 100.*(current-self.firstitem)/totalitems
+        perfile = (s1-self.s0)/(current-self.firstitem+1)
+        togo = (totalitems - current + self.firstitem)*perfile
+        hours = int(togo // 3600)
+        mins =  int((togo % 3600) // 60)
+        secs = (togo % 3600) % 60
+        togostr = '%02d:%02d:%04.1f' % ( hours, mins, secs)
+        print "%5.2f%%, %.3fs/item, %s: %s" % (percent, perfile, togostr, comment)
