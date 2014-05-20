@@ -64,3 +64,12 @@ def logspace(lower, upper, number):
     import numpy as np
     result = np.logspace(0.0, 1.0, number)
     return scaleto(result, [lower, upper])
+
+def file_exists(filepath):
+    ''' Check if a file exists and is accessible. '''
+    try:
+        f = open(filepath, 'rb')
+    except IOError as e:
+        return False
+    f.close()
+    return True
