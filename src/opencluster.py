@@ -156,9 +156,9 @@ class OpenCluster(object):
             self.sequence['FilterSequence'] = 'V,V'
             self.mode['mode'] = 'Clusters'
             self.mode['timeout'] = self.timeout # duration*fields*1000
-            self.mode['pernight'] = 6 # can be refined
-            self.mode['period_day'] = 0.04 # was 0.25
-            self.mode['zerofraction'] = 0.2
+            self.mode['pernight'] = 4 # can be refined
+            self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
+            self.mode['zerofraction'] = 0.1875
             self.mode['impact'] = 1.0
         
         
@@ -287,10 +287,10 @@ class OpenCluster(object):
         from datetime import date, datetime
         import time
         self.file = self.uname.lower().replace(' ','_')+'.xml'
-        filename, ext =  os.path.splitext(self.file)
+        filename, _ =  os.path.splitext(self.file)
         todaystr = date.strftime(date.today(),'%Y%m%d')
         self.filename = os.path.join(path,filename + '_' + todaystr + '.save')
-        def bin(boolean):
+        def str2bin(boolean):
             '''return the binary value to an appropriate string'''
             return str(boolean).lower()
         
@@ -301,9 +301,9 @@ class OpenCluster(object):
         f.write('startdate=%s\n' % self.startdate)
         f.write('enddate=%s\n' % self.enddate)
         f.write('TELESCOPE=%s\n' % self.telescope)
-        f.write('withfocus=%s\n' % bin(self.withfocus))
-        f.write('withacquire=%s\n' % bin(self.withacquire))
-        f.write('withguiding=%s\n' % bin(self.withguiding))
+        f.write('withfocus=%s\n' % str2bin(self.withfocus))
+        f.write('withacquire=%s\n' % str2bin(self.withacquire))
+        f.write('withguiding=%s\n' % str2bin(self.withguiding))
         f.write('title=%s\n' % str(self.title))
         f.write('uname=%s\n' % str(self.uname))
         f.write('propid=%s\n' % self.propid)
@@ -327,9 +327,9 @@ class OpenCluster(object):
         if self.mode['mode']=='Clusters':
             f.write('mode.timeout=%d\n' % self.timeout)
             f.write('mode.pernight=%d\n' % self.mode['pernight'])
-            f.write('mode.period_day=%.2f\n' % self.mode['period_day'])
-            f.write('mode.zerofraction=%.1f\n' % self.mode['zerofraction'])
-            f.write('mode.impact=%.1f\n' % self.mode['impact'])
+            f.write('mode.period_day=%f\n' % self.mode['period_day'])
+            f.write('mode.zerofraction=%f\n' % self.mode['zerofraction'])
+            f.write('mode.impact=%f\n' % self.mode['impact'])
             
         f.write('camera=%s\n' % self.camera['camera'])
         f.write('camera.XOffCCD=%d\n' % self.camera['XOffCCD'])
@@ -357,16 +357,12 @@ class OpenCluster(object):
         time.sleep(1) # otherwise submit.jnlp gets confused
         f.close()
 
-        fin = open(self.filename, 'rt')
-        lines = fin.readlines()
-        fin.close()
-
     def fromfile(self):
         """
         loads the data from a save file
         """
         f = open(self.filename, 'rt')
-        lines = f.readlines()
+#        lines = f.readlines()
         f.close()
         #TODO: processing of lines
         
@@ -376,7 +372,6 @@ class OpenCluster(object):
         """
         
         from subprocess import call
-        import os
         source = self.filename
         call(['/usr/bin/scp', source, target])
 
