@@ -40,7 +40,7 @@ class TimeLine(object):
             datetime.timedelta(seconds=self.expt[i])
         
         
-    def plot(self):
+    def plot(self, show=False):
         import matplotlib.pyplot as plt
         
         fig = plt.figure(figsize=(10,6))
@@ -50,9 +50,10 @@ class TimeLine(object):
         plt.grid(which='both')
         plt.ylabel('fraction of matched stars')
         plt.savefig('/home/jwe/Downloads/%s timeline.pdf' % self.target)
-        #plt.show()
+        if show:
+            plt.show()
         plt.close()
     
 if __name__ == '__main__':
-    tl = TimeLine("NGC 1647")
-    tl.plot()
+    tl = TimeLine("NGC6633")
+    tl.plot(True)
