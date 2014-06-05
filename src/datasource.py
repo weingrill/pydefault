@@ -39,7 +39,14 @@ class DataSource(object):
     def droptable(self, table):
         """drops a table"""
         try:
-            self.cursor.execute('DROP TABLE IF EXISTS '+ table+ ';')
+            self.cursor.execute('DROP TABLE IF EXISTS '+ table + ';')
+        finally:
+            self.database.commit()
+            
+    def dropview(self, view):
+        """drops a view"""
+        try:
+            self.cursor.execute('DROP VIEW IF EXISTS '+ view + ';')
         finally:
             self.database.commit()
     
