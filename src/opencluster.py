@@ -158,9 +158,9 @@ class OpenCluster(object):
             self.mode['timeout'] = self.timeout # duration*fields*1000
             self.mode['pernight'] = 4 # can be refined
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
+            # zerofraction is the length of one exposure in days
             self.mode['zerofraction'] = 0.1875
             self.mode['impact'] = 1.0
-        
         
         if self.object['RA'] is None or self.object['Dec'] is None:
             self.get_coordiantes()
@@ -427,6 +427,7 @@ def do_ngc1674():
     plt.show()
 
 def do_ngc2281center():
+    import matplotlib.pyplot as plt
 
     ngc2281 = OpenCluster(objectname='NGC 2281', uname='NGC 2281 BV center', obsmode='bvsl20')           
     ngc2281.plot()
@@ -438,9 +439,6 @@ def do_ngc2281center():
     plt.show()
         
 if __name__ == '__main__':
-    import matplotlib
-    matplotlib.use('WXAgg')
-    import matplotlib.pyplot as plt
     #do_ngc2281center()
     do_ngc1674()    
     
