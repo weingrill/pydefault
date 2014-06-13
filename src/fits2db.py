@@ -46,4 +46,5 @@ def fits2db(filename, relname, database='corot', user='sro', host='pina'):
     ds.commit()
    
 if __name__ == '__main__':
-    fits2db('/work2/jwe/cat/Hauck1997.fit','hauck')
+    #fits2db('/work2/jwe/cat/Hauck1997.fit','hauck')
+    fits2db('/home/jwe/Downloads/Mermilliod.fit','mermilliod')
