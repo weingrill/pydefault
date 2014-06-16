@@ -11,10 +11,14 @@ def convert(fitsfile):
     import numpy as np
     import pyfits
     
-    hdulist = pyfits.open(fitsfile)
-    hdr = hdulist[1].header       
-    img = hdulist[1].data
-    hdulist.close()
+    try:
+        hdulist = pyfits.open(fitsfile)
+        hdr = hdulist[1].header       
+        img = hdulist[1].data
+    except IOError:
+        exit()
+    finally:
+        hdulist.close()
     background = hdr['BACKGRND']
     backrms = hdr['BACKRMS']
     warning = ''

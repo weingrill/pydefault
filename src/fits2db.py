@@ -20,7 +20,9 @@ def fits2db(filename, relname, database='corot', user='sro', host='pina'):
     dtypes = {'>f8': 'double precision',
               '>f4': 'real',
               '>i2': 'smallint',
-              '>i4': 'integer'}
+              '>i4': 'integer',
+              'int32': 'integer',
+              'float32': 'double precision'}
     q = 'CREATE TABLE '+relname+' ('
     for n in tab.dtype.names:
         dtype = str(tab[n].dtype)
@@ -28,6 +30,8 @@ def fits2db(filename, relname, database='corot', user='sro', host='pina'):
             dbtype = dtypes[dtype]
         elif dtype.startswith('|S'):
                 dbtype = 'varchar('+dtype[2:]+')'
+        else:
+            print 'unknown type %s' % dtype
         print n,dtype, dbtype
         q += n.lower().replace('-','_') + ' ' + dbtype + ',\n'
     q = q.rstrip(',\n') + ');\n'
@@ -47,4 +51,4 @@ def fits2db(filename, relname, database='corot', user='sro', host='pina'):
    
 if __name__ == '__main__':
     #fits2db('/work2/jwe/cat/Hauck1997.fit','hauck')
-    fits2db('/home/jwe/Downloads/Mermilliod.fit','mermilliod')
+    fits2db('/home/jwe/Downloads/DeMedeiros.fit','demedeiros')
