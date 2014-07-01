@@ -103,7 +103,7 @@ def _worker(period):
     return theta(p[indi], mag_global[indi], bbegin, bend)
 
 
-def pdm(time, mag, minperiod, maxperiod, delta, nbins=None):
+def pdm(time, mag, minperiod=None, maxperiod=None, delta=None, nbins=None):
     """
     phase dispersion minimization algorithm
     
@@ -120,6 +120,14 @@ def pdm(time, mag, minperiod, maxperiod, delta, nbins=None):
     
     if nbins is None:
         nbins = int(np.sqrt(len(time)))
+    
+    if delta is None:
+        delta = np.median(time-np.roll(time, 1))
+    
+    if minperiod is None:
+        minperiod = delta*2.0
+    if maxperiod is None:
+        maxperiod = (max(time)-min(time))/2
     periods = np.arange(minperiod, maxperiod, delta)
     
     
@@ -130,3 +138,37 @@ def pdm(time, mag, minperiod, maxperiod, delta, nbins=None):
     pool.close() # no more tasks
     pool.join()  # wrap up current tasks
     return periods, thetas
+
+if __name__ == '__main__':
+    
+    import numpy as np
+    #n = arange(30)
+    N = 300
+    n = np.random.random_sample((N,))*60.0
+    n.sort()
+    p1 = 3.0
+    p2 = 4.0
+    phi1 = 0.0
+    phi2 = 0.784357
+    y = 3.0*np.cos(2*np.pi*n/p1+phi1) + 4.0*np.cos(2*np.pi*n/p2+phi2)
+
+    periods, theta = pdm(n,y)
+    
+    import matplotlib.pyplot as plt
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(2,1,1)
+    ax.set_xlabel('n')
+    ax.set_ylabel('$y_n$')
+    ax.plot(n, y, '.')
+    ax.plot(n, y, '--')
+    
+    ax = fig.add_subplot(2,1,2)
+    ax.set_xlabel('P')
+    ax.set_ylabel('$\theta$')
+    ax.plot(periods, theta)
+    ax.axvline(x=p1, linestyle='--', color='g')
+    ax.axvline(x=p2, linestyle='--', color='g')
+    
+    
+    plt.show()
