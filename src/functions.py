@@ -20,6 +20,16 @@ def scaleto(values, bounds, k=None, d=None):
         d = y1 - k*x1
     return k*values + d
 
+def normalize(values):
+    """scales values to [0.0, 1.0]"""
+    import numpy as np
+    
+    result = values - np.min(values)
+    m = np.max(result)
+    if abs(m) > 0.0:
+        result /= m
+    return result
+
 def histeq(im, nbr_bins=256):
     """http://www.janeriksolem.net/2009/06/histogram-equalization-with-python-and.html"""
     from numpy import histogram, interp
