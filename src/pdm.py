@@ -144,15 +144,19 @@ if __name__ == '__main__':
     import numpy as np
     #n = arange(30)
     N = 300
-    n = np.random.random_sample((N,))*60.0
+    days = 60.0
+    n = np.random.random_sample((N,))*days
     n.sort()
-    p1 = 3.0
-    p2 = 4.0
-    phi1 = 0.0
-    phi2 = 0.784357
-    y = 3.0*np.cos(2*np.pi*n/p1+phi1) + 4.0*np.cos(2*np.pi*n/p2+phi2)
+    
+    p = 4.0
+    amp = 0.1
+    sigma = (days/p)/N
+    snr = amp/sigma
+    noise = np.random.random_sample((N,))* snr
+    
+    y = amp*np.cos(2*np.pi*n/p)+noise
 
-    periods, theta = pdm(n,y)
+    periods, theta = pdm(n, y, delta = 30.0/N)
     
     import matplotlib.pyplot as plt
     
@@ -167,8 +171,8 @@ if __name__ == '__main__':
     ax.set_xlabel('P')
     ax.set_ylabel('$\theta$')
     ax.plot(periods, theta)
-    ax.axvline(x=p1, linestyle='--', color='g')
-    ax.axvline(x=p2, linestyle='--', color='g')
     
+    ax.axvline(x=periods[np.argmin(theta)], color='r')
+    ax.axvline(x=p, linestyle='--', color='g')
     
     plt.show()
