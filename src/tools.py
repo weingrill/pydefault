@@ -34,6 +34,7 @@ def log(logfile, logstring='', silent=False):
     @author: jwe
     Prints logstring to a logfile
     '''
+    raise(DeprecationWarning)
     from datetime import datetime
 
     now = datetime.now()
