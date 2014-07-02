@@ -43,13 +43,10 @@ def convert(fitsfile):
     im.save(fileout)                    
 
 if __name__ == '__main__':
-    import pyfits
     import sys, os
-    import numpy as np
     
     if len(sys.argv)>=2:
         for f in sys.argv[1:]:
             convert(f)
     else:
         print 'usage: fits2png infile(s)'
-                  
