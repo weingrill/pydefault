@@ -7,5 +7,5 @@ Created on Feb 6, 2013
 '''
 import pyfits
 import sys
-hdr = pyfits.getheader(sys.argv[1])
+hdr = pyfits.getheader(sys.argv[1],1)
 print hdr.keys
