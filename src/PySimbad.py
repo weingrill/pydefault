@@ -44,6 +44,27 @@ def simbad(psr):
     else:
         return info
 
+def simcoo(coordinates, dec=None):
+    """Search simbad database for a identifier based on coordinates."""
+    data = {}
+    data['output.format'] = 'ASCII'
+    if dec is None:
+        data['Coord'] = str(coordinates)
+    else:
+        data['Coord'] = '%f %f' % (coordinates, dec)
+    data['Radius'] = 3
+    data['Radius.unit'] = 'arcsec'
+    url_values = urllib.urlencode(data)
+    url = 'http://simbad.u-strasbg.fr/simbad/sim-coo'
+    full_url = url + '?' + url_values
+    data = urllib2.urlopen(full_url)
+    results = data.read()
+    for lines in results.split('\n'):
+        if lines.startswith('Object'):
+            ls = lines.split('  ---  ')
+            return ls[0][7:]
+    print results
+
 
 def SimbadCoord(psr):
     info = simbad(psr)
@@ -56,3 +77,14 @@ def SimbadCoord(psr):
         except KeyError:
             coords = info['Coordinates(FK4,ep=2000,eq=2000)']
     return coords
+
+if __name__ == '__main__':
+    #print simcoo('123.332697 -5.558109')
+    #print simcoo('123.570997 -5.900061')
+    #print simcoo('123.448826 -5.623558')
+    #print simcoo('123.325151 -5.640358')
+    #print simcoo('123.325125 -5.64067')
+    print simcoo('123.564614 -5.720953')
+    print simcoo(123.369415, -5.804038)
+    print simcoo(123.541259,-5.883464)
+    print simcoo(123.678062,-5.710619)
