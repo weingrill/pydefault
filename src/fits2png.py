@@ -10,6 +10,12 @@ def convert(fitsfile):
     from PIL import Image
     import numpy as np
     import pyfits
+    from os.path import exists
+
+    fileout = os.path.splitext(fitsfile)[0]+'.png'
+    if exists(fileout):
+        print '%s already exists' % fileout
+        return
     
     try:
         hdulist = pyfits.open(fitsfile)
@@ -23,9 +29,9 @@ def convert(fitsfile):
     backrms = hdr['BACKRMS']
     warning = ''
     if hdr['MOONDIST']<45.0:
-        warning += '%.1fdeg,' % hdr['MOONDIST']
+        warning += '%.1fd, ' % hdr['MOONDIST']
     if hdr['MOONILLU']>0.5:
-        warning += '%.1fper,' % (float(hdr['MOONILLU']) * 100.0)
+        warning += '%.1f%%, ' % (float(hdr['MOONILLU']) * 100.0)
         
     fimg = np.flipud(img)
     cimg = np.clip(fimg, background/2.0, 65535.0)
@@ -37,9 +43,8 @@ def convert(fitsfile):
     b = a.astype('uint8')
     im = Image.fromarray(b)
 
-    print '%s\t%.2f\t%.2f\t%s' % (fitsfile, background, backrms, warning)
+    print '%s %8.2f %7.2f %s' % (fitsfile, background, backrms, warning)
     
-    fileout = os.path.splitext(fitsfile)[0]+'.png'
     im.save(fileout)                    
 
 if __name__ == '__main__':
