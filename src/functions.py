@@ -68,11 +68,11 @@ def modulus(image):
     m = argmax(h)
     return loc[m]
 
-def logspace(lower, upper, number):
+def logspace(lower, upper, num=20):
     """returns true logarithmic spacing between lower and upper
     instead of numpy version"""
     import numpy as np
-    result = np.logspace(0.0, 1.0, number)
+    result = np.logspace(0.0, 1.0, num)
     return scaleto(result, [lower, upper])
 
 def file_exists(filepath):
