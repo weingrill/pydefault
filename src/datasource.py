@@ -70,4 +70,23 @@ class Table(object):
     
     def column(self, colname):
         return self.datasource.query('SELECT '+colname+' FROM TABLE '+self.name)
+    
+    def _db_setvalue(self, param, value):
+        from numpy import isnan
         
+        if isnan(value) or value=='':
+            query = """UPDATE %s 
+            SET %s=NULL 
+            WHERE starid='%s';""" % (self.name, param, self.starid)
+        else:
+            query = """UPDATE %s 
+            SET %s=%f 
+            WHERE starid='%s';""" % (self.name, param, value, self.starid)
+        self.wifsip.execute(query)    
+
+    def _db_getvalue(self, param):
+        result = self.wifsip.query("""SELECT %s 
+        FROM %s 
+        WHERE starid='%s';""" % (param, self.name, self.starid))
+        return result[0][0]    
+     
