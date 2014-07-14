@@ -109,21 +109,21 @@ def psd(t, y):
     return result,w/(2.0*pi)
 
 if __name__ == '__main__':
-    from numpy import cos, pi
+    from numpy import cos, pi, sqrt
     import numpy as np
     #n = arange(30)
-    N = 3000
+    N = 20
     n = np.random.random_sample((N,))*N
     n.sort()
     f1 = 0.25
     f2 = 0.4
     phi1 = 0.0
     phi2 = 0.784357
-    y = 3.0*cos(2*pi*f1*n+phi1) + 4.0*cos(2*pi*f2*n+phi2)
+    y = 0.0*cos(2*pi*f1*n+phi1) + 8.0*cos(2*pi*f2*n+phi2)
 
     px, f = ppsd(n,y)
     #px, f = psd(n,y)
-
+    px = sqrt(px)
     
     import matplotlib
     matplotlib.use('WXAgg')
@@ -139,6 +139,7 @@ if __name__ == '__main__':
     ax = fig.add_subplot(2,1,2)
     ax.set_xlabel('f')
     ax.set_ylabel('P($\omega$)')
+    ax.grid()
     ax.plot(f, px)
     
     plt.show()
