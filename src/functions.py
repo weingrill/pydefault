@@ -83,3 +83,50 @@ def file_exists(filepath):
         return False
     f.close()
     return True
+
+def autocorrelate(t, y):
+    """
+    calculate the autocorrelation on irregular data
+    """
+    import numpy as np
+    from scipy.interpolate import interp1d
+
+    #determine the median time step dt:
+    dt = np.median(t-np.roll(t, 1))
+    t0 = min(t)
+    t1 = max(t)
+    n = int((t1-t0)/dt)
+    nt = np.linspace(t0, t1, n)
+    f = interp1d(t, y, kind='linear')
+    fn = f(nt)
+    
+    m = np.mean(fn)
+    # we do padding
+    k = 2
+    x = fn - m
+    # complex FFT, since we need the conjugate
+    s = np.fft.fft(x, k*n)
+    ac = np.real(np.fft.ifft(s*s.conjugate()))
+    ac /= ac[0]
+    lag = nt-nt[0]
+    return ac[:n], lag[:n]
+
+def sigma_clip(t, y, sigmas=3.0):
+    """
+    performs sigma clipping on a lightcurve
+    """
+    from numpy import mean, std, compress
+    m = mean(y)
+    s = std(y)
+    valid = abs(y-m)<sigmas*s
+    t_clipped = compress(valid,t)
+    y_clipped = compress(valid,y)
+    return t_clipped, y_clipped
+
+def phase(t, y, period):
+    """
+    returns the phased lightcurve
+    """
+    tp = t % period
+    i = tp.argsort()
+    return tp[i], y[i]
