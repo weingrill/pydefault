@@ -25,12 +25,22 @@ def _worker(wi):
     r = dot(AT, y_global)
     return dot(dot(r.T,inv(R)),r)/N
 
-def ppsd(t, y, lower=0.001, upper=0.5):
+def ppsd(t, y, lower=0.001, upper=0.5, num=None):
+    '''
+    Plain Least-Squares Periodogram
+    adpted from http://www.sal.ufl.edu/eel6537_2010/LSP.pdf
+    multiprocess version
+    t, y: time series
+    lower: lower frequency
+    upper: upper frequency
+    num: number of frequencies to probe
+    '''
     from multiprocessing import Pool
     from numpy import linspace, pi
 
-    N = len(y)
-    w = 2.0*pi*linspace(lower, upper, N)
+    if num is None:
+        num = len(y)
+    w = 2.0*pi*linspace(lower, upper, num)
 
     pool = Pool(initializer=_init, initargs=(t,y))
     p = pool.map(_worker, w)
