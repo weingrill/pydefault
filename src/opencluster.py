@@ -57,73 +57,29 @@ class OpenCluster(object):
         self.filename = ''
         self._duration = 0
         self.fields = 1
-
+        self.obsmode = obsmode
+        
         from astronomy import jd
         # dirty import
         import datetime
         #take the current date as the start of the observation
         jd0 = jd(datetime.datetime.now())
         #self.mode['jd0'] = jd0
+        if not (obsmode in ['BVI','uvby','hahb','rot']):
+            raise TypeError('%s not a valid observation mode' % obsmode)
 
-        if obsmode == 'bv':
-            self.sequence['ExposureTime'] = 30.0
-            self.sequence['ExposureRepeat'] = 12
-            self.sequence['ExposureIncrease'] = '3*1,3*3,3*10,3*10'
-            self.sequence['FilterSequence'] = '3*V,3*B,3*V,3*B'
-            self.mode['mode'] = 'BlockedPerNight'
-            self.mode['maxobservations'] = 20
-            self.mode['pernight'] = 2 
-            self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = jd0
-            self.mode['zero'] = 180.0 # maximum observing season = half a year
-
-        if obsmode == 'bvsl20':
-            self.sequence['ExposureTime'] = 20.0 # 20.0 + 200.0
-            self.sequence['ExposureRepeat'] = 12
-            self.sequence['ExposureIncrease'] = '3*1,3*3,3*10,3*10'
-            self.sequence['FilterSequence'] = '3*V,3*B,3*V,3*B'
-            self.mode['mode'] = 'BlockedPerNight'
-            self.mode['maxobservations'] = 20
-            self.mode['pernight'] = 2 
-            self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = jd0
-            self.mode['zero'] = 180.0
-
-        if obsmode == 'bvsl30':
-            self.sequence['ExposureTime'] = 30.0 # 30.0 + 300.0
-            self.sequence['ExposureRepeat'] = 12
-            self.sequence['ExposureIncrease'] = '3*1,3*3,3*10,3*10'
-            self.sequence['FilterSequence'] = '3*V,3*B,3*V,3*B'
-            self.mode['mode'] = 'BlockedPerNight'
-            self.mode['maxobservations'] = 20
-            self.mode['pernight'] = 2 
-            self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = jd0
-            self.mode['zero'] = 180.0
-
-        if obsmode == 'bvi':
-            self.sequence['ExposureTime'] = 200.0 
-            self.sequence['ExposureRepeat'] = 15
-            self.sequence['ExposureIncrease'] = '5*1,5*1.5,5*3'
-            self.sequence['FilterSequence'] = '5*I,5*V,5*B'
-            self.mode['mode'] = 'BlockedPerNight'
-            self.mode['maxobservations'] = 20
-            self.mode['pernight'] = 2 
-            self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = jd0
-            self.mode['zero'] = 180.0
-
-        if obsmode == 'bvisl':
+        if obsmode == 'BVI':
             self.sequence['ExposureTime'] = 20.0 
-            self.sequence['ExposureRepeat'] = 18
-            self.sequence['ExposureIncrease'] = '3*2,3*3,3*6,3*10,3*15,3*30'
-            self.sequence['FilterSequence'] = '3*I,3*V,3*B,3*I,3*V,3*B'
-            self.mode['mode'] = 'BlockedPerNight'
-            self.mode['maxobservations'] = 20
+            self.sequence['ExposureRepeat'] = 6
+            self.sequence['ExposureIncrease'] = '1,2,4,10,15,30'
+            self.sequence['FilterSequence'] = 'I,V,B,I,V,B'
+            self.mode['mode'] = 'Clusters'
             self.mode['pernight'] = 2 
+            self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
             self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = jd0
-            self.mode['zero'] = 180.0
+            # zerofraction is the length of one exposure in days
+            self.mode['zerofraction'] = 0.1875
+            self.mode['impact'] = 1.0
 
         if obsmode == 'uvby':
             self.sequence['ExposureTime'] = 60.0 
@@ -211,7 +167,7 @@ class OpenCluster(object):
             i = fields.index(f)
             subframes.append(OpenCluster(objectname=self.object['ObjectName'],
                                          uname = '%s %s' % (self.uname, names[i]), 
-                                         ra = f[0], dec = f[1]))
+                                         ra = f[0], dec = f[1], obsmode = self.obsmode))
         #do some deep copy of the object:
         for sf in subframes:
             sf.fields = self.fields
@@ -437,9 +393,3 @@ def do_ngc2281center():
     xmin,xmax = plt.xlim()
     plt.xlim(xmax,xmin)
     plt.show()
-        
-if __name__ == '__main__':
-    #do_ngc2281center()
-    do_ngc1674()    
-    
-    
