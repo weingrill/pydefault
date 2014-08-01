@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 '''
 Created on May 14, 2014
 
@@ -26,6 +28,7 @@ class TimeLine(object):
         query = """SELECT datesend, expt, 1.*matched/stars
         FROM frames 
         WHERE object like '%s %%' 
+        AND NOT datesend is NULL
         ORDER BY datesend;""" % (self.target)
         
         result = wifsip.query(query)
@@ -49,11 +52,14 @@ class TimeLine(object):
         plt.title('%s' % self.target)
         plt.grid(which='both')
         plt.ylabel('fraction of matched stars')
-        plt.savefig('/home/jwe/Downloads/%s timeline.pdf' % self.target)
+        
         if show:
             plt.show()
+        else:
+            plt.savefig('/home/jwe/Downloads/%s timeline.pdf' % self.target)
         plt.close()
     
 if __name__ == '__main__':
-    tl = TimeLine("NGC6633")
+    import sys
+    tl = TimeLine(sys.argv[1])
     tl.plot(True)
