@@ -111,7 +111,7 @@ def autocorrelate(t, y):
     lag = nt-nt[0]
     return ac[:n], lag[:n]
 
-def sigma_clip(t, y, sigmas=3.0):
+def sigma_clip(t, y, e=None,sigmas=3.0):
     """
     performs sigma clipping on a lightcurve
     """
@@ -119,9 +119,13 @@ def sigma_clip(t, y, sigmas=3.0):
     m = mean(y)
     s = std(y)
     valid = abs(y-m)<sigmas*s
-    t_clipped = compress(valid,t)
-    y_clipped = compress(valid,y)
-    return t_clipped, y_clipped
+    t_clipped = compress(valid, t)
+    y_clipped = compress(valid, y)
+    if not e is None:
+        e_clipped = compress(valid, e)
+        return t_clipped, y_clipped, e_clipped
+    else:
+        return t_clipped, y_clipped
 
 def phase(t, y, period):
     """
