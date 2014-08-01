@@ -25,7 +25,7 @@ def _worker(wi):
     r = dot(AT, y_global)
     return dot(dot(r.T,inv(R)),r)/N
 
-def ppsd(t, y, lower=0.001, upper=0.5, num=None):
+def ppsd(t, y, lower=0.001, upper=0.5, num=None, logspace=False):
     '''
     Plain Least-Squares Periodogram
     adpted from http://www.sal.ufl.edu/eel6537_2010/LSP.pdf
@@ -37,10 +37,13 @@ def ppsd(t, y, lower=0.001, upper=0.5, num=None):
     '''
     from multiprocessing import Pool
     from numpy import linspace, pi
-
+    from functions import logspace
     if num is None:
         num = len(y)
-    w = 2.0*pi*linspace(lower, upper, num)
+    if logspace:
+        w = 2.0*pi*logspace(lower, upper, num)
+    else:
+        w = 2.0*pi*linspace(lower, upper, num)
 
     pool = Pool(initializer=_init, initargs=(t,y))
     p = pool.map(_worker, w)
