@@ -1,5 +1,5 @@
 import urllib2
-import urllib, sys
+import urllib
 
 class SimbadError(Exception):
     def __init__(self, value):
