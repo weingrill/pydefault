@@ -42,6 +42,6 @@ def hselect(images, fields, expr):
 
 if __name__ == '__main__':
     from glob import glob
-    from iraf import ccdlist
+    
     images = glob('/work2/jwe/stella/wifsip/20131023/*.fitz')
     ccdlist(images)
