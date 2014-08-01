@@ -7,7 +7,7 @@ Created on Sep 18, 2013
 '''
 def convert(fitsfile):
     from functions import scaleto
-    from PIL import Image
+    from PIL import Image  # @UnresolvedImport
     import numpy as np
     import pyfits
     from os.path import exists
