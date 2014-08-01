@@ -14,7 +14,7 @@ class FileCache(str):
         """ 
         
         # do we have enough diskspace?
-        import sys,os,statvfs
+        import os,statvfs
 
         f = os.statvfs("/home")
         print "preferred block size", "=>", f[statvfs.F_BSIZE]
