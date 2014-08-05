@@ -72,6 +72,13 @@ def lsqspectrum(t, data, limit=100):
             fp = 1./freq[i+1]
         sigma = np.std(amp[:n/2-1])
         k += 1
+    amplitudes = np.array(amplitudes)
+    periods    = np.array(periods)
+    phases     = np.array(phases)
+    amplitude_errors = np.array(amplitude_errors)
+    period_errors = np.array(period_errors)
+    residual = np.array(residual
+                        )
     return (amplitudes, periods, phases, 
             amplitude_errors, period_errors, 
             residual)
