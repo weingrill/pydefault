@@ -103,7 +103,7 @@ def file_exists(filepath):
     ''' Check if a file exists and is accessible. '''
     try:
         f = open(filepath, 'rb')
-    except IOError as e:
+    except IOError:
         return False
     f.close()
     return True
