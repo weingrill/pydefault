@@ -55,17 +55,10 @@ class OpenCluster(object):
                             'AltTarget.Min':30.0}
         self.file = ''
         self.filename = ''
-        self._duration = 0
         self.fields = 1
         self.obsmode = obsmode
         
-        from astronomy import jd
-        # dirty import
-        import datetime
-        #take the current date as the start of the observation
-        jd0 = jd(datetime.datetime.now())
-        #self.mode['jd0'] = jd0
-        if not (obsmode in ['BVI','uvby','hahb','rot']):
+        if not (obsmode in ['BVI','BVR','uvby','Hby','rot']):
             raise TypeError('%s not a valid observation mode' % obsmode)
 
         if obsmode == 'BVI':
@@ -81,41 +74,56 @@ class OpenCluster(object):
             self.mode['zerofraction'] = 0.1875
             self.mode['impact'] = 1.0
 
-        if obsmode == 'uvby':
-            self.sequence['ExposureTime'] = 60.0 
-            self.sequence['ExposureRepeat'] = 12
-            self.sequence['ExposureIncrease'] = '3*1,3*1.5,3*2,3*3'
-            self.sequence['FilterSequence'] = '3*y,3*b,3*v,3*u'
-            self.mode['mode'] = 'BlockedPerNight'
-            self.mode['maxobservations'] = 20
+        if obsmode == 'BVR':
+            self.sequence['ExposureTime'] = 20.0 
+            self.sequence['ExposureRepeat'] = 6
+            self.sequence['ExposureIncrease'] = '1,2,4,10,15,30'
+            self.sequence['FilterSequence'] = 'R,V,B,R,V,B'
+            self.mode['mode'] = 'Clusters'
             self.mode['pernight'] = 2 
+            self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
             self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = jd0
-            self.mode['zero'] = 180.0
+            # zerofraction is the length of one exposure in days
+            self.mode['zerofraction'] = 20.0*(1+2+4+10+15+30)/86400.0
+            self.mode['impact'] = 1.0
 
-        if obsmode == 'hahb':
-            self.sequence['ExposureTime'] = 60.0 
-            self.sequence['ExposureRepeat'] = 12
-            self.sequence['ExposureIncrease'] = '3*1,3*3,3*2,3*6'
-            self.sequence['FilterSequence'] = '3*hbw,3*hbn,3*haw,3*han'
-            self.mode['mode'] = 'BlockedPerNight'
-            self.mode['maxobservations'] = 20
+        if obsmode == 'uvby':
+            self.sequence['ExposureTime'] = 30.0 
+            self.sequence['ExposureRepeat'] = 8
+            self.sequence['ExposureIncrease'] = '2,3,4,5,8,12,16,20'
+            self.sequence['FilterSequence'] = 'y,b,v,u,y,b,v,u'
+            self.mode['mode'] = 'Clusters'
             self.mode['pernight'] = 2 
+            self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
             self.mode['timeout'] = self.timeout
-            self.mode['jd0'] = jd0
-            self.mode['zero'] = 180.0
+            # zerofraction is the length of one exposure in days
+            self.mode['zerofraction'] = 30.0*(2+3+4+5+8+12+16+20)/86400.0
+            self.mode['impact'] = 1.0
+
+        if obsmode == 'Hby':
+            self.sequence['ExposureTime'] = 60.0 
+            self.sequence['ExposureRepeat'] = 6
+            self.sequence['ExposureIncrease'] = '1,1.5,1,3,2,6'
+            self.sequence['FilterSequence'] = 'y,b,hbw,hbn,haw,han'
+            self.mode['mode'] = 'Clusters'
+            self.mode['pernight'] = 2 
+            self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
+            self.mode['timeout'] = self.timeout
+            # zerofraction is the length of one exposure in days
+            self.mode['zerofraction'] = 60.0*(1+1.5+1+3+2+6)/86400.0
+            self.mode['impact'] = 1.0
 
         if obsmode == 'rot':
             self.sequence['ExposureTime'] = 30.0
-            self.sequence['ExposureRepeat'] = 2
-            self.sequence['ExposureIncrease'] = '2,10'
-            self.sequence['FilterSequence'] = 'V,V'
+            self.sequence['ExposureRepeat'] = 3
+            self.sequence['ExposureIncrease'] = '2,10,20'
+            self.sequence['FilterSequence'] = 'V,V,R'
             self.mode['mode'] = 'Clusters'
             self.mode['timeout'] = self.timeout # duration*fields*1000
             self.mode['pernight'] = 4 # can be refined
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
             # zerofraction is the length of one exposure in days
-            self.mode['zerofraction'] = 0.1875
+            self.mode['zerofraction'] = 30.0*(2+10+20)/86400.0
             self.mode['impact'] = 1.0
         
         if self.object['RA'] is None or self.object['Dec'] is None:
@@ -206,13 +214,33 @@ class OpenCluster(object):
             plt.plot(ras, das)
         else:
             axis.plot(ras, das)
+    
+    @property
+    def exposuretime(self):
+        return self.sequence['ExposureTime']
+    
+    @property
+    def pernight(self):
+        return self.mode['pernight']
+
+    @property
+    def exposurerepeat(self):
+        seq = self.sequence['ExposureIncrease'] #'5*1,5*1.5,5*3'
+        sseq = seq.split(',')
+        repeat = 0
+        for s in sseq:
+            if s.find('*')>0:
+                repeat += int(s.split('*')[0])
+            else:
+                repeat += 1
+        return repeat
 
     @property
     def duration(self):
         """
         getter for duration
         """
-        expt = float(self.sequence['ExposureTime'])
+        expt = self.exposuretime
         seq = self.sequence['ExposureIncrease'] #'5*1,5*1.5,5*3'
         sseq = seq.split(',')
         repeat = 0
@@ -344,52 +372,3 @@ class OpenCluster(object):
               background=False, 
               show=False)
 
-def do_ngc2281():
-    
-    ngc2281 = OpenCluster(objectname='NGC 2281', uname='NGC 2281 rot', obsmode='rot')           
-    ngc2281_subframes = ngc2281.plan_wifsip(nfields=5)
-    import matplotlib.pyplot as plt
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-
-    for sf in ngc2281_subframes:
-        print sf.uname
-        sf.plot()
-        sf.tycho()
-        sf.tofile('/home/jwe/')
-        sf.transfer()
-    xmin,xmax = plt.xlim()
-    plt.xlim(xmax,xmin)
-    plt.show()
-
-def do_ngc1674():
-
-    ngc2281 = OpenCluster(objectname='NGC 1647', uname='NGC 1647 bv', obsmode='bv')           
-    ngc2281_subframes = ngc2281.plan_wifsip(nfields=5)
-    import matplotlib.pyplot as plt
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.set_aspect(1.)
-
-    for sf in ngc2281_subframes:
-        print sf.uname
-        sf.plot(ax)
-        sf.tycho()
-        
-        sf.tofile('/home/jwe/')
-        sf.transfer()
-    xmin,xmax = plt.xlim()
-    ax.set_xlim(xmax,xmin)
-    plt.show()
-
-def do_ngc2281center():
-    import matplotlib.pyplot as plt
-
-    ngc2281 = OpenCluster(objectname='NGC 2281', uname='NGC 2281 BV center', obsmode='bvsl20')           
-    ngc2281.plot()
-    ngc2281.tycho()
-    ngc2281.tofile('/home/jwe/')
-    ngc2281.transfer()
-    xmin,xmax = plt.xlim()
-    plt.xlim(xmax,xmin)
-    plt.show()
