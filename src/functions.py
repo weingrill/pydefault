@@ -3,11 +3,35 @@ Created on Apr 26, 2013
 
 @author: jwe
 '''
-def gaussian(x, mu = 0.0, sigma = 1.0):
+def gaussian(x, amp = 1.0, mu = 0.0, sigma = 1.0):
     """ definition of the guassian function"""
     from math import sqrt, pi, exp
-    y = 1 / ( sqrt(2. * pi * sigma) )  * exp( ((x - mu) / sigma)**2 )
+    y = amp / ( sqrt(2. * pi * sigma) )  * exp( ((x - mu) / sigma)**2 )
     return y
+
+def gauss(x, a, x0, sigma):
+    from numpy import exp
+    return a*exp(-(x-x0)**2/(2*sigma**2))
+
+
+def gauss_fit(x, y, amp=None, mean=None, sigma=None ):
+    '''
+    fits a gaussian to (x, y)
+    adopted from 
+    http://stackoverflow.com/questions/19206332/gaussian-fit-for-python
+    '''
+    from scipy.optimize import curve_fit
+    
+    n = len(x)
+    if amp is None:
+        amp = max(y)
+    if mean is None:
+        mean = sum(x*y)/n
+    if sigma is None:
+        sigma = sum(y*(x-mean)**2)/n
+    popt,_ = curve_fit(gauss, x, y, p0=[amp, mean, sigma])  
+    popt[2] = abs(popt[2])
+    return popt  
 
 def scaleto(values, bounds, k=None, d=None):
     """scales values within bounds"""
