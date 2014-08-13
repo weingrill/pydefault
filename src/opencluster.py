@@ -8,7 +8,7 @@ class OpenCluster(object):
     classdocs
     '''
 
-    def __init__(self, objectname='', uname='', ra=None, dec=None, obsmode=None):
+    def __init__(self, objectname='', uname=None, ra=None, dec=None, obsmode=None):
         """
         initializes the OpenCluster Object with certain values
         obsmode can be 'rot' for rotation photometry
@@ -16,23 +16,23 @@ class OpenCluster(object):
         """
         self.startdate = '2013-03-21'
         self.enddate = '2018-12-31'
+        self.priority = 1.0
         self.telescope = 'STELLA-I'
         self.withfocus = True
         self.withacquire = True
         self.withguiding = True
+        self.guiderchoice = 'piggy-back'
         self.title = 'SOCS'
-        self.uname = uname
+        if uname is None:
+            self.uname = '%s %s' % (objectname, obsmode)
+        else:
+            self.uname = uname
         self.propid = 'cluster.survey'
         self.abstract = 'Photometric monitoring of open stellar clusters'
         self.pi = 'Weingrill'
         self.affil = 'CORE'
         self.team = 'Barnes'
-        self.mode = {'mode':'FewPerNight',
-                     'timeout':3600000,
-                     'pernight':2,
-                     'period_day':0.25,
-                     'zerofraction':0.2,
-                     'impact':1.0}
+        self.mode = {'mode': 'Clusters'}
         self.camera = {'camera':'direct',
                        'XOffCCD':0,
                        'YOffCCD':0,
@@ -41,10 +41,6 @@ class OpenCluster(object):
                        'XBinCCD':1,
                        'YBinCCD':1}
         self.sequence = {'sequence':'FullFilters',
-                        'ExposureTime':30.0,
-                        'ExposureRepeat':15,
-                        'ExposureIncrease':'5*1,5*1.5,5*3',
-                        'FilterSequence':'5*I,5*V,5*B',
                         'offset':0.0}
         self.object = {'ObjectName':objectname,
                        'RA':ra,
@@ -67,11 +63,11 @@ class OpenCluster(object):
             self.sequence['ExposureIncrease'] = '1,2,4,10,15,30'
             self.sequence['FilterSequence'] = 'I,V,B,I,V,B'
             self.mode['mode'] = 'Clusters'
+            self.mode['pickdelay'] = 0
             self.mode['pernight'] = 2 
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
-            self.mode['timeout'] = self.timeout
             # zerofraction is the length of one exposure in days
-            self.mode['zerofraction'] = 0.1875
+            self.mode['zerofraction'] = 20.0*(1+2+4+10+15+30)/86400.0
             self.mode['impact'] = 1.0
 
         if obsmode == 'BVR':
@@ -82,7 +78,6 @@ class OpenCluster(object):
             self.mode['mode'] = 'Clusters'
             self.mode['pernight'] = 2 
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
-            self.mode['timeout'] = self.timeout
             # zerofraction is the length of one exposure in days
             self.mode['zerofraction'] = 20.0*(1+2+4+10+15+30)/86400.0
             self.mode['impact'] = 1.0
@@ -95,7 +90,7 @@ class OpenCluster(object):
             self.mode['mode'] = 'Clusters'
             self.mode['pernight'] = 2 
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
-            self.mode['timeout'] = self.timeout
+            #self.mode['timeout'] = self.timeout
             # zerofraction is the length of one exposure in days
             self.mode['zerofraction'] = 30.0*(2+3+4+5+8+12+16+20)/86400.0
             self.mode['impact'] = 1.0
@@ -108,7 +103,7 @@ class OpenCluster(object):
             self.mode['mode'] = 'Clusters'
             self.mode['pernight'] = 2 
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
-            self.mode['timeout'] = self.timeout
+            #self.mode['timeout'] = self.timeout
             # zerofraction is the length of one exposure in days
             self.mode['zerofraction'] = 60.0*(1+1.5+1+3+2+6)/86400.0
             self.mode['impact'] = 1.0
@@ -119,7 +114,7 @@ class OpenCluster(object):
             self.sequence['ExposureIncrease'] = '2,10,20'
             self.sequence['FilterSequence'] = 'V,V,R'
             self.mode['mode'] = 'Clusters'
-            self.mode['timeout'] = self.timeout # duration*fields*1000
+            #self.mode['timeout'] = self.timeout # duration*fields*1000
             self.mode['pernight'] = 4 # can be refined
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
             # zerofraction is the length of one exposure in days
@@ -262,6 +257,14 @@ class OpenCluster(object):
         """calculate timeout"""
         return self.duration * self.fields * 1000.0
     
+    @property
+    def zerofraction(self):
+        return self.duration/86400.0
+    
+    @property
+    def pickdelay(self):
+        return self.duration * self.fields
+    
     def tofile(self, path = './'):
         """
         stores the data to a save file
@@ -269,7 +272,6 @@ class OpenCluster(object):
         #ngc6940_sw_bvi_20130926.save
         import os
         from datetime import date, datetime
-        import time
         self.file = self.uname.lower().replace(' ','_')+'.xml'
         filename, _ =  os.path.splitext(self.file)
         todaystr = date.strftime(date.today(),'%Y%m%d')
@@ -284,6 +286,7 @@ class OpenCluster(object):
         f.write('#%s\n' % datetime.strftime(datetime.now(),'%a %b %d %H:%M:%S %Z %Y'))
         f.write('startdate=%s\n' % self.startdate)
         f.write('enddate=%s\n' % self.enddate)
+        f.write('priority=%.1f\n' % self.priority)
         f.write('TELESCOPE=%s\n' % self.telescope)
         f.write('withfocus=%s\n' % str2bin(self.withfocus))
         f.write('withacquire=%s\n' % str2bin(self.withacquire))
@@ -296,23 +299,12 @@ class OpenCluster(object):
         f.write('affil=%s\n' % self.affil)
         f.write('team=%s\n' % self.team)
         f.write('mode=%s\n' % self.mode['mode'])
-        if self.mode['mode']=='FewPerNight':
-            f.write('mode.timeout=%d\n' % self.timeout)
-            f.write('mode.pernight=%d\n' % self.mode['pernight'])
-            f.write('mode.impact=%.1f\n' % self.mode['impact'])
-            
-        if self.mode['mode']=='BlockedPerNight':
-            f.write('mode.maxobservations=%d\n' % self.mode['maxobservations'])
-            f.write('mode.pernight=%d\n' % self.mode['pernight'])
-            f.write('mode.timeout=%d\n' % self.timeout)
-            f.write('mode.jd0=%.1f\n' % self.mode['jd0'])
-            f.write('mode.zero=%.1f\n' % self.mode['zero'])
 
         if self.mode['mode']=='Clusters':
-            f.write('mode.timeout=%d\n' % self.timeout)
+            f.write('mode.pickdelay=%d\n' % self.pickdelay)
             f.write('mode.pernight=%d\n' % self.mode['pernight'])
             f.write('mode.period_day=%f\n' % self.mode['period_day'])
-            f.write('mode.zerofraction=%f\n' % self.mode['zerofraction'])
+            f.write('mode.zerofraction=%f\n' % self.zerofraction)
             f.write('mode.impact=%f\n' % self.mode['impact'])
             
         f.write('camera=%s\n' % self.camera['camera'])
@@ -338,7 +330,6 @@ class OpenCluster(object):
         f.write('file=%s\n' % self.file)
         f.write('duration=%d\n' % self.duration)
         f.flush()
-        time.sleep(1) # otherwise submit.jnlp gets confused
         f.close()
 
     def fromfile(self):
@@ -351,18 +342,20 @@ class OpenCluster(object):
         #TODO: processing of lines
         
     def transfer(self, target='sro@stella:/stella/home/www/uploads/weingrill/save/'):
-        """
+        '''
         uploads the files to stella for the submission tool
-        """
-        
+        '''
         from subprocess import call
+        import time
+        
         source = self.filename
+        time.sleep(1) # otherwise submit.jnlp gets confused
         call(['/usr/bin/scp', source, target])
 
     def tycho(self):
-        """
+        '''
         plot tycho stars upon fov
-        """
+        '''
         from tycho import tycho
         
         tycho(self.object['RA'], 
