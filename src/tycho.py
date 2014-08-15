@@ -10,6 +10,7 @@ def tycho(ra_center, dec_center, fov = 1.0, grid=True, background=True, show=Tru
     from functions import scaleto
     from numpy import clip, array
     from datasource import DataSource
+    from pylab.cm import Spectral  # @UnresolvedImport
     
     tycho = DataSource(database='wifsip', host='pina', user='sro')
     query = """select mradeg, mdedeg, vt, bt-vt
@@ -32,7 +33,7 @@ def tycho(ra_center, dec_center, fov = 1.0, grid=True, background=True, show=Tru
     if grid:
         plt.grid(color='w')
     plt.scatter(ra, dec)
-    plt.scatter(ra, dec, s=pts, c=-bv, edgecolor='none', cmap=pylab.cm.Spectral)
+    plt.scatter(ra, dec, s=pts, c=-bv, edgecolor='none', cmap=Spectral)
     if show:
         plt.show()
     
