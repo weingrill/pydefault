@@ -137,7 +137,7 @@ def pdm(time, mag, minperiod=None, maxperiod=None, delta=None, nbins=None):
     thetas = pool.map(_worker, periods)
     pool.close() # no more tasks
     pool.join()  # wrap up current tasks
-    return periods, thetas
+    return periods, np.array(thetas)
 
 if __name__ == '__main__':
     
