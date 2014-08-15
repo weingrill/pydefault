@@ -27,7 +27,7 @@ class FileCache(str):
         self.cachefile = cachefile
         return self.cachefile
     
-def log(logfile, logstring='', silent=False):
+def log(logfile, logstring='', silent=False, withtime=True):
     '''
     Created on Jan 14, 2013
 
@@ -40,7 +40,10 @@ def log(logfile, logstring='', silent=False):
     now = datetime.now()
     try:
         f = open(logfile,'at')
-        f.write('%s\t%s\n' % (now, logstring.rstrip('\n')))
+        if withtime:
+            f.write('%s\t%s\n' % (now, logstring.rstrip('\n')))
+        else:
+            f.write('%s\n' % (logstring.rstrip('\n')))
         f.close()
     except IOError:
         print 'Can''t write logfile %s!' % logfile
