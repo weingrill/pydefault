@@ -34,21 +34,20 @@ if __name__ == '__main__':
     #import matplotlib.pyplot as plt
 
     import ephem
-    from datetime import timedelta
     
     izana = ephem.Observer()
     date = ephem.Date('2013/12/31 12:00:00')
     izana.date = '2013/03/15'
     izana.lat = '28.301195'
     izana.lon = '-16.509209'
-    sun = ephem.Sun()
+    sun = ephem.Sun()  # @UndefinedVariable
         
     for i in range(365):
         newdate = date + i
         izana.date = newdate
         sun.compute(izana)
         at = izana.next_antitransit(sun)
-        #print at, izana.next_transit(sun)
+        
         izana.date = at 
         print izana.sidereal_time(), izana.date 
     
