@@ -14,6 +14,8 @@ class OpenCluster(object):
         obsmode can be 'rot' for rotation photometry
                     or 'cmd' for BVI photometry
         """
+        
+        self.objectname = objectname
         self.startdate = '2013-03-21'
         self.enddate = '2018-12-31'
         self.priority = 1.0
@@ -123,6 +125,87 @@ class OpenCluster(object):
         
         if self.object['RA'] is None or self.object['Dec'] is None:
             self.get_coordiantes()
+    
+    def plot_ephem(self, obsdate=None):
+        import matplotlib.pyplot as plt
+        
+        import ephem
+        import datetime
+        from numpy import pi,empty
+        
+        from astronomy import airmass
+        
+        stella = ephem.Observer()
+        #stella.lon, stella.lat = '13.104659', '52.404963' # Potsdam
+        stella.lat, stella.lon = 31.9583, -111.59867 # KPNO
+        stella.lat, stella.lon = 28.301214,-16.509246
+        sun, moon = ephem.Sun(), ephem.Moon()  # @UndefinedVariable
+        
+        stella.pressure = 0
+        stella.horizon = '-0:34'
+        stella.elevation = 2000
+        
+        ephemstr = ','.join([self.objectname,
+                             'f|O',
+                             self.ra_str,
+                             self.dec_str,
+                             '5.0'])
+        
+        ocluster = ephem.readdb(ephemstr)
+        ocluster.compute()
+        
+        print 'Moonrise:', stella.previous_rising(moon)
+        print 'Moonset: ', stella.next_setting(moon)
+        print 'Sunrise: ', stella.previous_rising(sun)
+        print 'Sunset:  ', stella.next_setting(sun)
+        
+        if obsdate is None:
+            today = datetime.datetime.today()
+        else: today = datetime.datetime.strptime(obsdate,'%Y/%m/%d %H:%M:%S')
+            
+        dt =  datetime.timedelta(days=14)
+        #today += dt
+        
+        sun_alt = empty(24)
+        moon_alt = empty(24)
+        hours = range(24)
+        ocluster_alt = empty(24)
+        for h in hours:
+            today = today.replace(hour=h,minute=0,second=0)
+            stella.date = today 
+            sun.compute(stella)
+            moon.compute(stella)
+            ocluster.compute(stella)
+            sun_alt[h] = float(sun.alt)
+            moon_alt[h] = float(moon.alt)
+            ocluster_alt[h] = float(ocluster.alt)
+            #print alt[h]
+        
+        fig = plt.figure()
+        ax_h = fig.add_subplot(111)
+        
+        ax_h.set_ylim(0,90) 
+        ax_h.set_xlim(0,24) 
+    
+        ax_airmass = ax_h.twinx()
+        
+        ax_h.set_xticks(hours)
+        heights = ax_h.get_yticks()
+        am = airmass(heights)
+        aml = ['%.2f ' % a for a in am]
+        ax_airmass.set_ylim(0.,90.)
+        ax_airmass.set_yticklabels(aml)
+        ax_h.grid()
+        ax_h.plot(hours, sun_alt*180.0/pi,'yo')
+        ax_h.plot(hours, moon_alt*180.0/pi,'go')
+        ax_h.plot(hours, ocluster_alt*180.0/pi,'k')
+        
+        ax_h.set_xlabel("hours")
+        ax_h.set_ylabel("height (degrees)")
+        ax_airmass.set_ylabel("airmass")
+        
+        plt.draw()  
+        plt.show()            
         
     def get_coordiantes(self):
         """
@@ -139,6 +222,8 @@ class OpenCluster(object):
             p = self.coords.find('-')
         ra = self.coords[:p].strip()    
         dec = self.coords[p:].strip()
+        self.ra_str = ra
+        self.dec_str = dec
         self.object['RA'] = ast.hms2dd(ra)
         self.object['Dec'] = ast.dms2dd(dec)
         self.coords=[self.object['RA'],self.object['Dec']]
