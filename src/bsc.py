@@ -5,7 +5,6 @@ Created on Apr 26, 2013
 '''
 if __name__ == '__main__':
     import matplotlib
-    matplotlib.use('WXAgg')
     import matplotlib.pyplot as plt
 
     import pyfits
@@ -34,6 +33,13 @@ if __name__ == '__main__':
     #Plejades, Hyades 03 47 00 +24 07.0
     plt.xlim(75.,50.)
     plt.ylim(10.,30.)
+    x0 = 66.6-7.25/2
+    x1 = 66.6+7.25/2
+    y0 = 16.8-7.25/2
+    y1 = 16.8+7.25/2
+    plt.xlabel('R.A. (deg)')
+    plt.ylabel('Dec. (deg)')
+    plt.plot([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0],'w',linestyle='--')
     plt.grid(color='w')
-    plt.scatter(ra, dec, s=pts, c=-bv, edgecolor='none', cmap=pylab.cm.Spectral)
+    plt.scatter(ra, dec, s=pts, c=-bv, edgecolor='none', cmap=pylab.cm.Spectral)  # @UndefinedVariable
     plt.show()
