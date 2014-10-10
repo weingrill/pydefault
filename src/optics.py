@@ -38,19 +38,23 @@ class Detector(object):
             pixels, pixelsize = detdb[detname]
         self.pixels = pixels
         self.pixelsize = pixelsize
-            
+    
+    @property        
     def width(self):
         """returns the width of the detectors size"""
         return self.pixels[0]*self.pixelsize
 
+    @property        
     def height(self):
         """returns the height of the detectors size"""
         return self.pixels[1]*self.pixelsize
     
+    @property        
     def size(self):
         """returns the dimensions of the sensor"""
         return [self.pixels[0]*self.pixelsize, self.pixels[1]*self.pixelsize]
 
+    @property        
     def diameter(self):
         """diagonal dimension of the sensor"""
         from math import sqrt
@@ -59,7 +63,7 @@ class Detector(object):
     def fieldofview(self, telescope):
         """sensors field of view in radians for the diagonal, x and y"""
         from math import atan
-        return (2.*atan(self.diameter()/(2.*telescope.focallength)),
+        return (2.*atan(self.diameter/(2.*telescope.focallength)),
                 2.*atan(self.pixels[0]*self.pixelsize/(2.*telescope.focallength)),
                 2.*atan(self.pixels[1]*self.pixelsize/(2.*telescope.focallength)))
 
@@ -93,12 +97,14 @@ class Telescope(object):
         teldb = {'C11':(0.2794,2.794), 
                  'MTO1000':(0.1,1.0),
                  'Cassegrain50':(0.5,7.5),
-                 'Zeiss110':(0.11,0.11*7.5)}
+                 'Zeiss110':(0.11,0.11*7.5),
+                 'BMK':(0.30,0.75)}
         if name in teldb:
             diameter, focallength = teldb[name]
         self.diameter = diameter
         self.focallength = focallength
     
+    @property
     def focalratio(self):
         """returns the focal ratio of the telescope"""
         return self.focallength/self.diameter
@@ -122,7 +128,11 @@ class Telescope(object):
     
     def magnification(self, minpupil=0.001, maxpupil=0.0075):
         """returns the minimum and the maximum magnifications"""
-        return (self.diameter/maxpupil, self.diameter/minpupil)    
+        return (self.diameter/maxpupil, self.diameter/minpupil) 
+    
+    def limitingmagnitude(self):
+        from math import log10
+        return 5*log10(self.diameter) + 2.7   
  
 class Eyepiece(object):
     def __init__(self, focallength, fov):
@@ -163,3 +173,11 @@ if __name__ == '__main__':
     print 'ideal: %i mm' % (1000.0*meade.focallength/60.0)
     print 1000.0*meade.focallength/minmag, 1000.0*meade.focallength/maxmag, 'mm'
     
+    print 'BMK:'
+    bmk = Telescope(0.3, 0.75, name='BMK')
+    print '1/f: %f' % bmk.focalratio
+    ccd = Detector([10560,10560],9e-6)
+    print 'FOV: %f diag.' % radtodeg(bmk.fieldofview(ccd))
+    print 'FOV: %f x %f' % (radtodeg(ccd.fieldofview(bmk)[1]),radtodeg(ccd.fieldofview(bmk)[2]))
+    print 'BMK resolution: %f"' % radtoarcsec(bmk.resolution())
+    print 'BMK resolution: %f"' % radtoarcsec(ccd.pixelfov(bmk))
