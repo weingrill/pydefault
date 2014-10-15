@@ -69,7 +69,7 @@ class OpenCluster(object):
             self.mode['pernight'] = 2 
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
             # zerofraction is the length of one exposure in days
-            self.mode['zerofraction'] = 20.0*(1+2+4+10+15+30)/86400.0
+            self.mode['zerofraction'] = 2.0/24.0
             self.mode['impact'] = 1.0
 
         if obsmode == 'BVR':
@@ -81,7 +81,7 @@ class OpenCluster(object):
             self.mode['pernight'] = 2 
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
             # zerofraction is the length of one exposure in days
-            self.mode['zerofraction'] = 20.0*(1+2+4+10+15+30)/86400.0
+            self.mode['zerofraction'] = 2.0/24.0
             self.mode['impact'] = 1.0
 
         if obsmode == 'uvby':
@@ -94,7 +94,7 @@ class OpenCluster(object):
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
             #self.mode['timeout'] = self.timeout
             # zerofraction is the length of one exposure in days
-            self.mode['zerofraction'] = 30.0*(2+3+4+5+8+12+16+20)/86400.0
+            self.mode['zerofraction'] = 2.0/24.0
             self.mode['impact'] = 1.0
 
         if obsmode == 'Hby':
@@ -107,7 +107,7 @@ class OpenCluster(object):
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
             #self.mode['timeout'] = self.timeout
             # zerofraction is the length of one exposure in days
-            self.mode['zerofraction'] = 60.0*(1+1.5+1+3+2+6)/86400.0
+            self.mode['zerofraction'] = 2.0/24.0
             self.mode['impact'] = 1.0
 
         if obsmode == 'rot':
@@ -120,7 +120,7 @@ class OpenCluster(object):
             self.mode['pernight'] = 4 # can be refined
             self.mode['period_day'] = 0.5/self.mode['pernight'] # was 0.25
             # zerofraction is the length of one exposure in days
-            self.mode['zerofraction'] = 30.0*(2+10+20)/86400.0
+            self.mode['zerofraction'] = 1.0/24.0
             self.mode['impact'] = 1.0
         
         if self.object['RA'] is None or self.object['Dec'] is None:
@@ -163,7 +163,7 @@ class OpenCluster(object):
             today = datetime.datetime.today()
         else: today = datetime.datetime.strptime(obsdate,'%Y/%m/%d %H:%M:%S')
             
-        dt =  datetime.timedelta(days=14)
+        #dt =  datetime.timedelta(days=14)
         #today += dt
         
         sun_alt = empty(24)
@@ -286,6 +286,11 @@ class OpenCluster(object):
         plot the fov
         """
         import matplotlib.pyplot as plt
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.set_aspect(1.)
+        self.tycho()
         ra, dec = self.object['RA'],self.object['Dec']
         d2 = 0.5*1320.2/3600.0
         ras = [ra-d2, ra+d2, ra+d2, ra-d2, ra-d2]
@@ -294,6 +299,7 @@ class OpenCluster(object):
             plt.plot(ras, das)
         else:
             axis.plot(ras, das)
+        plt.show()
     
     @property
     def exposuretime(self):
@@ -449,4 +455,5 @@ class OpenCluster(object):
               grid=False, 
               background=False, 
               show=False)
+
 
