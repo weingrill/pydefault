@@ -164,7 +164,8 @@ def caldat(mjd):
     fracofday = mjd - floor(mjd)
     hour = int(fracofday*24)
     minute = int(fracofday*24*60) - hour*60
-    second = int(fracofday*24*60*60)
+    second = int(fracofday*24*60*60) - hour*3600 - minute*60
+    #TODO: microseconds
     return datetime(year, month, day, hour, minute, second)
 
 def ecl2equ(coords, jd):
@@ -322,5 +323,7 @@ class observer(object):
         return 280.46061837 + 360.98564736629*(self.time-2451545.0) + \
                0.000387933*t**2 - t**3/38710000.0
 if __name__ == '__main__':
-    print now()
-    print jd(now())
+    n = now()
+    print n
+    print jd(n),mjd(n),caldat(mjd(n))
+    
