@@ -47,7 +47,7 @@ class OpenCluster(object):
         self.object = {'ObjectName':objectname,
                        'RA':ra,
                        'Dec':dec}
-        self.constraints = {'MoonDistance.Min':20,
+        self.constraints = {'MoonDistance.Min':40,
                             'SolHeight.Max':-16.0,
                             'AirmassTarget.Max':2.0,
                             'AltTarget.Min':30.0}
