@@ -63,30 +63,49 @@ class DataSource(object):
         if self.database:
             self.database.close()  
 
-class Table(object):
-    def __init__(self, name, datasource):
-        self.name = name
-        self.datasource = datasource
+class Table(dict):
+    '''
+    class that interfaces a table on wifsip database
+    '''
+    keyvalue = ''
     
-    def column(self, colname):
-        return self.datasource.query('SELECT '+colname+' FROM TABLE '+self.name)
-    
-    def _db_setvalue(self, param, value):
-        from numpy import isnan
+    def __init__(self, tablename, keyname):
+        self.keyname = keyname
+        self.tablename = tablename
+        self.wifsip = DataSource(database='wifsip', user='sro', host='pina.aip.de')
         
-        if isnan(value) or value=='':
+
+    def keys(self):
+        query = """SELECT column_name, data_type, character_maximum_length
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE table_name = '%s';""" % self.tablename
+        result = self.wifsip.query(query)
+        keys = [r[0] for r in result]
+        return keys
+    
+    def values(self):
+        query = """SELECT * 
+        FROM %s 
+        WHERE %s = '%s'""" % (self.tablename, self.keyname, self.keyvalue)
+        result = self.wifsip.query(query)
+        values = [r for r in result[0]]
+        return values
+
+    def __setitem__(self, key, value):
+        if value is None:
             query = """UPDATE %s 
             SET %s=NULL 
-            WHERE starid='%s';""" % (self.name, param, self.starid)
+            WHERE %s='%s';""" % (self.tablename, key, self.keyname, self.keyvalue)
         else:
+            if type(value) is str:
+                value = "'%s'" % value            
             query = """UPDATE %s 
-            SET %s=%f 
-            WHERE starid='%s';""" % (self.name, param, value, self.starid)
-        self.wifsip.execute(query)    
-
-    def _db_getvalue(self, param):
+            SET %s=%s 
+            WHERE %s='%s';""" % (self.tablename, key, str(value), self.keyname, self.keyvalue)
+        self.wifsip.execute(query)
+        
+    def __getitem__(self, key):
         result = self.wifsip.query("""SELECT %s 
         FROM %s 
-        WHERE starid='%s';""" % (param, self.name, self.starid))
-        return result[0][0]    
-     
+        WHERE %s like '%s';""" % (key, self.tablename, self.keyname, self.keyvalue))
+        return result[0][0]
