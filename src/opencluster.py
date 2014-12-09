@@ -346,7 +346,8 @@ class OpenCluster(object):
     @property
     def timeout(self):
         """calculate timeout"""
-        return self.duration * self.fields * 1000.0
+        return 0.0
+        #return self.duration * self.fields * 1000.0
     
     @property
     def zerofraction(self):
@@ -432,17 +433,54 @@ class OpenCluster(object):
         f.close()
         #TODO: processing of lines
         
-    def transfer(self, target='sro@stella:/stella/home/www/uploads/weingrill/save/'):
+    def transfer(self):
         '''
         uploads the files to stella for the submission tool
+        
+        ssh operator@ciruelo
+        rsync -e ssh -r -v  -t sro@stella:/stella/home/www/uploads .
+
+        Dann SCP1 (SCP2):
+        SCP1 uploads/weingrill/submit/m_67_bvr_se.xml
+        kopiert nach Teneriffa, wifsip
+        
+        oder FCP1
+        findet alle aktuellen (max. 24h alten) dateien und kopiert nach wifsip.
+        
+        Dann weiter wie im Wiki.
+        
+        script-update (aus .save .xml files machen ohne GUI):
+        
+        cd uploads
+        ./recreate.sh <liste-von-save-files>
+        java -Djava.ext.dirs=/usr/share/java/ -cp /z/operator/java stella.jview.JTargetMaker\$Recreate proposal.create $i
+        generiert *hier in upload* die xml files.
+        mv *.xml weingrill/submit/,
+        dann SCP1, bzw. FCP1
+        
+        Achtung: Naechstes rsync holt wieder die daten von stella.aip.de
+        
+        liste-von-save-files: ascii ala:
+        
+        weingrill/save/ngc_1647_bv_se_20131017.submit
+        
+        d.h. relativer pfad von uploads aus.
+
         '''
         from subprocess import call
         import time
+        import os
         
         source = self.filename
+        target='sro@stella:/stella/home/www/uploads/weingrill/save/'
         time.sleep(1) # otherwise submit.jnlp gets confused
+        print 'scp %s %s' % (source, target)
         call(['/usr/bin/scp', source, target])
-
+        print os.path.dirname(source)
+        _, filename = os.path.split(source)
+        #call(['/usr/bin/ssh', 'operator@ciruelo', '"ls ~/bin/autosubmit.sh %s"' % filename])
+        call(['/usr/bin/ssh', 'operator@ciruelo', 'bin/autosubmit.sh %s' % filename])
+        
     def tycho(self):
         '''
         plot tycho stars upon fov
