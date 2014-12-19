@@ -35,6 +35,37 @@ def tau_vdb(bv):
     tau_int = interp1d(bv_vdb, tau_C, kind='linear')
     return tau_int(bv)
 
+def tau_gill(bv):
+    """
+    taken from Gilliland 1985
+    """
+    from scipy.interpolate import interp1d
+    BV = [-0.044, -0.035, -0.022, -0.013, -0.011, -0.001, 0.005, 0.015, 0.027, 
+          0.034, 0.042, 0.052, 0.054, 0.065, 0.067, 0.075, 0.078, 0.088, 0.091, 
+          0.102, 0.107, 0.115, 0.121, 0.126, 0.132, 0.137, 0.137, 0.143, 0.149, 
+          0.152, 0.157, 0.157, 0.163, 0.166, 0.171, 0.172, 0.174, 0.177, 0.180, 
+          0.180, 0.183, 0.183, 0.185, 0.186, 0.191, 0.194, 0.209, 0.234, 0.256, 
+          0.272, 0.285, 0.288, 0.289, 0.292, 0.292, 0.292, 0.295, 0.296, 0.302, 
+          0.312, 0.318, 0.322, 0.329, 0.332, 0.339, 0.346, 0.349, 0.356, 0.359, 
+          0.366, 0.370, 0.377, 0.380, 0.387, 0.390, 0.397, 0.401, 0.408, 0.415, 
+          0.422, 0.429, 0.436, 0.447, 0.454, 0.465, 0.472, 0.479, 0.490, 0.501, 
+          0.515]
+    tau_C = [25.3569, 21.1591, 13.3237, 11.1177, 9.6580, 8.0589, 6.2051, 
+             4.5892, 3.4631, 2.8898, 2.3633, 1.9721, 1.7132, 1.4295, 1.2418, 
+             1.0362, 0.9002, 0.7511, 0.6395, 0.5336, 0.4364, 0.3642, 0.2804, 
+             0.2340, 0.1992, 0.1415, 0.1629, 0.1181, 0.0856, 0.0966, 0.0584, 
+             0.0714, 0.0415, 0.0478, 0.0283, 0.0346, 0.0205, 0.0152, 0.0071, 
+             0.0115, 0.0053, 0.0088, 0.0042, 0.0045, 0.0037, 0.0033, 0.0034, 
+             0.0039, 0.0045, 0.0053, 0.0067, 0.0092, 0.0124, 0.0158, 0.0182, 
+             0.0301, 0.0222, 0.0272, 0.0272, 0.0272, 0.0333, 0.0407, 0.0497, 
+             0.0608, 0.0744, 0.0909, 0.1112, 0.1332, 0.1629, 0.1992, 0.2436, 
+             0.2978, 0.3642, 0.4453, 0.5445, 0.6658, 0.7978, 0.9755, 1.1929, 
+             1.4586, 1.7834, 2.1373, 2.6133, 3.1955, 3.8294, 4.6825, 5.7254, 
+             6.8615, 8.3897, 10.0542]
+    tau_int = interp1d(BV, tau_C, kind='linear')
+    return tau_int(bv)
+
+
 def tau(bv):
     """
     Table 1 from Barnes & Kim 2010 p.678
@@ -51,6 +82,9 @@ def tau(bv):
              81.17,70.89,62.54,55.01,47.90,41.24,34.87,28.64,21.93,14.67,8.141,
              2.394,0.0,0.0,0.0,0.0,0.0])
     BV = (B-V)
+    
+    if bv<=0.515:
+        return tau_gill(bv)
     try:
         tau_int = interp1d(BV[::-1], tau_C[::-1], kind='linear')
     except ValueError:
@@ -67,9 +101,11 @@ def gyroage(bv, P, P0=1.1):
     
     k_C = 0.646 # days Myr^-1 Barnes 2010 p.224
     k_I = 452.0 # Myr day^-1 Barnes 2010 p.224
-    
-    t = (tau(bv)/k_C)*np.log(P/P0) + (0.5*k_I/tau(bv))*(P**2 - P0**2) 
-    return t
+    if P>P0:
+        t = (tau(bv)/k_C)*np.log(P/P0) + (0.5*k_I/tau(bv))*(P**2 - P0**2) 
+        return t
+    else:
+        return 0.0
 
 def gyroperiod(bv, age, P0=1.1, version=2010):
     """
@@ -90,7 +126,7 @@ def gyroperiod(bv, age, P0=1.1, version=2010):
                            args=(bv[i], age, P0),
                            options={'xtol': 1e-3, 'disp': False})
             P[i] = res['x'][0]
-        
+        P[P<P0] = P0
         return P
 
     if version == 2007:
@@ -112,19 +148,36 @@ def gyroperiod(bv, age, P0=1.1, version=2010):
 
 
 if __name__ == '__main__':
-    import matplotlib
-    matplotlib.use('WXAgg')
+    #import matplotlib
+    #matplotlib.use('WXAgg')
     import numpy as np
+    from scipy.optimize import minimize
+    import matplotlib.pyplot as plt
     
-    bv = np.linspace(0.5, 1.6, num=10)
+    bv = np.linspace(0.0, 1.6, num=50)
     #bv = np.linspace(0.473, 1.631, num=100)
     P = np.empty(len(bv))
     
+    P11 = gyroperiod(bv, 400)
+    P34 = gyroperiod(bv, 400, P0=3.4)
+    P01 = gyroperiod(bv, 400, P0=0.1)
+    
+    for k in zip(bv,P01,P11,P34):
+        print '%.2f\t%.3f\t%.3f\t%.3f' % k
+    
+    plt.plot(bv, P11, 'g--')
+    plt.plot(bv, P01, 'b--')
+    
+    plt.plot(bv, P34, 'r')
+    plt.xlabel('B - V')
+    plt.ylabel('P rot')
+    plt.title('400 Myr')
+    plt.grid()
+    plt.show()
+    exit()
     def min_func(x, bv, age):
         return abs(gyroage(bv, x) - age)
     x0 = 10.0
-    from scipy.optimize import minimize
-    import matplotlib.pyplot as plt
 
     for age in [500.,800.,1000.,2000.,4000.,4570.]:
         print age,' Myr'    
