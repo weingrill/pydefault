@@ -5,7 +5,6 @@ Created on May 22, 2014
 
 code to test the dictionary record with psql
 '''
-import psycopg2
 import psycopg2.extras
 
 database = 'corot'
