@@ -20,6 +20,27 @@ def deredd(Eby, by, m1, c1, ub):
     ub0 = array(ub) - Rub*Eby0
     return by0, m0, c0, ub0
 
+def stellarclass( by0, m0, c0, by0, Hbeta):
+    """
+        (1) B0 - A0, classes III - V, 2.59 < Hbeta < 2.88,-0.20 <   c0  < 1.00
+        (2) B0 - A0, class   Ia     , 2.52 < Hbeta < 2.59,-0.15 <   c0  < 0.40
+        (3) B0 - A0, class   Ib     , 2.56 < Hbeta < 2.61,-0.10 <   c0  < 0.50
+        (4) B0 - A0, class   II     , 2.58 < Hbeta < 2.63,-0.10 <   c0  < 0.10
+        (5) A0 - A3, classes III - V, 2.87 < Hbeta < 2.93,-0.01 < (b-y)o< 0.06
+        (6) A3 - F0, classes III - V, 2.72 < Hbeta < 2.88, 0.05 < (b-y)o< 0.22
+        (7) F1 - G2, classes III - V, 2.60 < Hbeta < 2.72, 0.22 < (b-y)o< 0.39
+        (8) G2 - M2, classes  IV _ V, 0.20 < m0   < 0.76, 0.39 < (b-y)o< 1.00
+    """
+    if 2.59 < Hbeta < 2.88 and -0.20 <  c0 < 1.00: return 1
+    if 2.52 < Hbeta < 2.59 and -0.15 <  c0 < 0.40: return 2
+    if 2.56 < Hbeta < 2.61 and -0.10 <  c0 < 0.50: return 3
+    if 2.58 < Hbeta < 2.63 and -0.10 <  c0 < 0.10: return 4
+    if 2.87 < Hbeta < 2.93 and -0.01 < by0 < 0.06: return 5
+    if 2.72 < Hbeta < 2.88 and  0.05 < by0 < 0.22: return 6
+    if 2.60 < Hbeta < 2.72 and  0.22 < by0 < 0.39: return 7
+    if 0.20 < m0    < 0.76 and  0.39 < by0 < 1.00: return 8
+    return None
+    
 def uvbybeta(xby, xm1, xc1, xHbeta, xn, eby_in = None, verbose=False):
     """
     Derive dereddened colors, metallicity, and Teff from Stromgren colors.
@@ -167,17 +188,17 @@ def uvbybeta(xby, xm1, xc1, xHbeta, xn, eby_in = None, verbose=False):
                 For dereddening the linear relations between c0 and (u-b)
                 determined from Zhang (1983, AJ 88, 825) is used.
                 """
-                Eub = ( 1.5*c1 - ub + 0.035) / (1.5/(Rub/Rc1)-1)
+                Eub = (1.5*c1 - ub + 0.035) / (1.5/(Rub/Rc1)-1.0)
                 Eby[i] = Eub/Rub
             by0, m0, c0, ub0 = deredd(Eby[i], by, m1, c1, ub)
             if Hbeta is None: Hbeta = 0.037*c0 + 2.542
 
         elif n==3:
             if eby_in is None:
-                Eub = (1.36*c1-ub+0.004) / (1.36/(Rub/Rc1)-1)
+                Eub = (1.36*c1 - ub + 0.004) / (1.36/(Rub/Rc1)-1.0)
                 Eby[i] = Eub/Rub
             by0, m0, c0, ub0 = deredd(Eby[i], by, m1, c1, ub)
-            if Hbeta is None: Hbeta = 0.047*c0 +2.578
+            if Hbeta is None: Hbeta = 0.047*c0 + 2.578
             
         elif n==4:
             """
@@ -417,6 +438,8 @@ def uvbybeta(xby, xm1, xc1, xHbeta, xn, eby_in = None, verbose=False):
     return Te,MV,Eby,delm0,radius
 
 if __name__ == '__main__':
+    print stellarclass(2.7,0,0)
+    exit()
     #Te,MV,Eby,delm0,radius = uvbybeta(-0.001,0.105,0.647,2.75, 1, verbose=True)
     #assert(Eby==0.050)
     by = [-0.001 ,0.403, 0.244, 0.216, 0.394 ]
