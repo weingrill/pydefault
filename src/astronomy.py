@@ -89,6 +89,8 @@ def jd(epoch):
 
 def hms2dd(hms):
     """convert hours, minutes seconds to degrees"""
+    import warnings
+    warnings.warn('Use SkyCoords instead', DeprecationWarning)
     if type(hms) is str:
         if hms.find(':')>0: 
             hms = hms.split(':')
@@ -100,6 +102,8 @@ def hms2dd(hms):
 
 def hms2hh(hms):
     """convert hours, minutes seconds to decimal hours"""
+    import warnings
+    warnings.warn('Use SkyCoords instead', DeprecationWarning)
     if type(hms) is str:
         if hms.find(':')>0: 
             hms = hms.split(':')
@@ -113,6 +117,8 @@ def hms2hh(hms):
 def dms2dd(dms):
     """convert degrees, minutes seconds to degrees"""
     from functions import sign
+    import warnings
+    warnings.warn('Use SkyCoords instead', DeprecationWarning)
     if type(dms) is str:
         if dms.find(':')>0: 
             dms = dms.split(':')
@@ -125,14 +131,20 @@ def dms2dd(dms):
 def dd2dms(degrees):
     """convert degrees to degrees, minutes, seconds"""
     from math import trunc
-    d = trunc(degrees)
-    m = trunc((degrees-d)*60.)
-    s = ((degrees-d)*60.-m)*60. 
-    return (d,m,s)
+    from functions import sign
+    import warnings
+    warnings.warn('Use SkyCoords instead', DeprecationWarning)
+    adegrees = abs(degrees)
+    d = trunc(adegrees)
+    m = trunc((adegrees-d)*60.)
+    s = ((adegrees-d)*60.-m)*60. 
+    return (sign(degrees)*d,m,s)
 
 def dd2hms(degrees):
     """convert degrees to hours, minutes, seconds"""
     from math import trunc
+    import warnings
+    warnings.warn('Use SkyCoords instead', DeprecationWarning)
     h = trunc(degrees/15.)
     frac_hours = degrees/15. - h
     m = trunc(frac_hours*60.)
@@ -322,8 +334,9 @@ class observer(object):
         t = (self.time - 2451545.0)/36525.
         return 280.46061837 + 360.98564736629*(self.time-2451545.0) + \
                0.000387933*t**2 - t**3/38710000.0
+               
 if __name__ == '__main__':
     n = now()
     print n
     print jd(n),mjd(n),caldat(mjd(n))
-    
+    print dd2dms(-5.75)
