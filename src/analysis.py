@@ -1,9 +1,9 @@
 '''
 Created on Dec 2, 2013
 
-@author: jwe
+@author: Joerg Weingrill <jweingrill@aip.de>
 '''
-def lsqspectrum(t, data, limit=100):
+def lsqspectrum(t, data, limit=100, verbose=False):
     """
     compute the least-sqares-spectrum of a given dataset
     """
@@ -53,7 +53,7 @@ def lsqspectrum(t, data, limit=100):
         except TypeError:
             err = p1[1]
         if p1[1]>err:
-            #print '%7.4f %.4f!' % (p1[1], err)
+            if verbose: print '%7.4f %.4f!' % (p1[1], err)
             amplitudes.append(abs(p1[0]))
             periods.append(p1[1])
             phases.append(p1[2])
@@ -62,7 +62,7 @@ def lsqspectrum(t, data, limit=100):
             
         else:
             k -= 1
-            #print '%7.4f %.4f' % (p1[1], err)
+            if verbose: print '%7.4f %.4f' % (p1[1], err)
         amp, freq, phase = calc_ft(t, residual)
         i = np.argmax(amp[:n/2-1])
         fa = amp[i]
