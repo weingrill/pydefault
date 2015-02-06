@@ -61,6 +61,15 @@ def mag_distance(d):
     """
     from numpy import log10
     return 5.0*log10(d) - 5.0 + 4.83
+
+def distance_modulus(d):
+    """
+    calculates the distance modulus of an object
+    at the given distance d in parsec
+    """
+    from numpy import log10
+    return 5.0*log10(d) - 5.0
+    
     
 def jd(epoch):
     """
