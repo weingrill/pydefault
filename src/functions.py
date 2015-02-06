@@ -5,7 +5,8 @@ Created on Apr 26, 2013
 '''
 def gaussian(x, amp = 1.0, mu = 0.0, sigma = 1.0):
     """ definition of the guassian function"""
-    from math import sqrt, pi, exp
+    from numpy import sqrt, pi, exp
+    #TODO: fix
     y = amp / ( sqrt(2. * pi * sigma) )  * exp( ((x - mu) / sigma)**2 )
     return y
 
