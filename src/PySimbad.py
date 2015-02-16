@@ -84,6 +84,10 @@ if __name__ == '__main__':
     #print simcoo('123.448826 -5.623558')
     #print simcoo('123.325151 -5.640358')
     #print simcoo('123.325125 -5.64067')
+    m48 = simbad('M48')
+    for k in m48.keys():
+        print k,'\t',m48[k]
+    exit()
     print simcoo('123.564614 -5.720953')
     print simcoo(123.369415, -5.804038)
     print simcoo(123.541259,-5.883464)
