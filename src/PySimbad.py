@@ -241,22 +241,12 @@ def SimbadCoord(psr):
 if __name__ == '__main__':
     #s = SimbadObject('HD192043')
     s = SimbadObject('NGC6882')
-    #print s['Proper motions']
-    #print s['Redshift']
-    #print s['cz']
-    #print s['Identifiers']
     print s['ICRS Coordinates']
-    #print s.keys()
-    #print s.values()
     s1 = SimbadObject('HD192043')
     print s1['ICRS Coordinates']
     
     #print simcoo('123.332697 -5.558109')
-    #print simcoo('123.570997 -5.900061')
-    #print simcoo('123.448826 -5.623558')
-    #print simcoo('123.325151 -5.640358')
-    #print simcoo('123.325125 -5.64067')
-    #print simcoo('123.564614 -5.720953')
-    #print simcoo(123.369415, -5.804038)
-    #print simcoo(123.541259,-5.883464)
-    #print simcoo(123.678062,-5.710619)
+    m48 = simbad('M48')
+    for k in m48.keys():
+        print k,'\t',m48[k]
+    exit()

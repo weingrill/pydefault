@@ -1,3 +1,4 @@
+#!/usr/bin/python
 '''
 Created on Nov 14, 2013
 
@@ -28,26 +29,25 @@ At 8 pm RA = 2M + 2 e.g. For Jan, RA = 2x1+2 = 4 at 8 pm
 At midnt RA = 2M + 6 e.g. For Jan, RA = 2x1+6 = 8 at midnt 
 At 4 am RA = 2M + 10 e.g. For Jan, RA = 2x1+10 = 12 at 4 am
 '''
-if __name__ == '__main__':
-    #import matplotlib
-    #matplotlib.use('WXAgg')
-    #import matplotlib.pyplot as plt
+#import matplotlib
+#matplotlib.use('WXAgg')
+#import matplotlib.pyplot as plt
 
-    import ephem
+import ephem
+
+izana = ephem.Observer()
+date = ephem.Date('2013/12/31 12:00:00')
+izana.date = '2013/03/15'
+izana.lat = '28.301195'
+izana.lon = '-16.509209'
+sun = ephem.Sun()  # @UndefinedVariable
     
-    izana = ephem.Observer()
-    date = ephem.Date('2013/12/31 12:00:00')
-    izana.date = '2013/03/15'
-    izana.lat = '28.301195'
-    izana.lon = '-16.509209'
-    sun = ephem.Sun()  # @UndefinedVariable
-        
-    for i in range(365):
-        newdate = date + i
-        izana.date = newdate
-        sun.compute(izana)
-        at = izana.next_antitransit(sun)
-        
-        izana.date = at 
-        print izana.sidereal_time(), izana.date 
+for i in range(365):
+    newdate = date + i
+    izana.date = newdate
+    sun.compute(izana)
+    at = izana.next_antitransit(sun)
     
+    izana.date = at 
+    print izana.sidereal_time(), izana.date 
+
