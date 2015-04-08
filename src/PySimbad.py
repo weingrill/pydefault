@@ -240,13 +240,15 @@ def SimbadCoord(psr):
 
 if __name__ == '__main__':
     #s = SimbadObject('HD192043')
-    s = SimbadObject('NGC6882')
-    print s['ICRS Coordinates']
-    s1 = SimbadObject('HD192043')
-    print s1['ICRS Coordinates']
+    #s = SimbadObject('NGC6882')
+    #print s['ICRS Coordinates']
+    #s1 = SimbadObject('HD192043')
+    #print s1['ICRS Coordinates']
+    s2 = SimbadObject('M 67')
+    print s2['ICRS Coordinates']
     
     #print simcoo('123.332697 -5.558109')
-    m48 = simbad('M48')
-    for k in m48.keys():
-        print k,'\t',m48[k]
-    exit()
+    #m48 = simbad('M48')
+    #for k in m48.keys():
+    #    print k,'\t',m48[k]
+    
