@@ -4,6 +4,27 @@ Created on Jan 24, 2013
 @author: jwe
 '''
 
+class Coordinates(object):
+    """
+    simple coordinates class.
+    """
+    def __init__(self, alpha, delta):
+        self.alpha = alpha
+        self.delta = delta
+    
+    def __repr__(self):
+        return '(%f,%f)' % (self.alpha, self.delta)
+        
+    def __str__(self):
+        alphadeg = dd2hms(self.alpha)
+        deltadeg = dd2dms(self.delta)
+        salpha = '%02d %02d %05.2f' % alphadeg
+        if self.delta<0 and self.delta>-1: 
+            sdelta = '-%02.2d %02d %04.1f' % deltadeg
+        else:
+            sdelta = '%-02.2d %02d %04.1f' % deltadeg
+        return salpha + ' ' + sdelta
+
 def now():
     """returns the current time in UT"""
     import datetime
@@ -345,7 +366,9 @@ class observer(object):
                0.000387933*t**2 - t**3/38710000.0
                
 if __name__ == '__main__':
-    n = now()
-    print n
-    print jd(n),mjd(n),caldat(mjd(n))
-    print dd2dms(-5.75)
+    #n = now()
+    #print n
+    #print jd(n),mjd(n),caldat(mjd(n))
+    #print dd2dms(-5.75)
+    c = Coordinates(0.125, -0.125)
+    print c
