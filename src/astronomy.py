@@ -109,7 +109,7 @@ def jd(epoch):
     m = epoch.month + 12*a - 3
     
     d = epoch.day
-    h = epoch.hour/24. + epoch.minute/1440. + epoch.second/86400. # microsecond might be added here?
+    d += epoch.hour/24. + epoch.minute/1440. + epoch.second/86400. # microsecond might be added here?
     
     if [epoch.year,epoch.month,d] >= [1582,10,15]:
         jdn = epoch.day + floor((153*m + 2)/5) + 365*y + floor(y/4) - floor(y/100) + floor(y/400) - 32045
@@ -282,7 +282,7 @@ class sun(celestialobject):
         from math import sqrt,sin,cos,atan
         # number of Julian centuries since Jan 1, 2000, 12 UT
         t = (self.time-2451545.0) / 36525
-        l,b = self.ecliptic()
+        l, _ = self.ecliptic()
         # obliquity eps of ecliptic:
         eps = 23.0 + 26.0/60.0 + 21.448/3600.0 - \
             (46.8150*t + 0.00059*t**2 - 0.001813*t**3)/3600.
@@ -299,7 +299,7 @@ class sun(celestialobject):
         from math import sqrt,sin,atan
         # number of Julian centuries since Jan 1, 2000, 12 UT
         t = (self.time-2451545.0) / 36525
-        l,b = self.ecliptic()
+        l, _ = self.ecliptic()
         # obliquity eps of ecliptic:
         eps = 23.0 + 26.0/60.0 + 21.448/3600.0 - \
             (46.8150*t + 0.00059*t**2 - 0.001813*t**3)/3600.
