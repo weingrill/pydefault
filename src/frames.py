@@ -18,7 +18,7 @@ class Frame(dict):
         
         self.objid = objid
         
-        self.wifsip = DataSource(database='wifsip', user='sro', host='pina.aip.de')
+        self.wifsip = DataSource(database='stella', user='stella', host='pera.aip.de')
         
         
 #         for k in keys:
