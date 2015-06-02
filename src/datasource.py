@@ -4,7 +4,7 @@ Created on Apr 17, 2013
 @author: jwe <jweingrill@aip.de>
 '''
 class DataSource(object):
-    def __init__(self, database, user, host, dictcursor=False):
+    def __init__(self, database=None, user=None, host=None, dictcursor=False):
         """Constructor: opens database on host using username"""
         import psycopg2
         
