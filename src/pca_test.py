@@ -21,11 +21,11 @@ t = np.random.rand(epochs)*30
 t = np.sort(t)
 #t = np.linspace(0, 30, epochs)
 
-mag0 = np.arange(stars)*0.0
-#mag0 = np.random.rand(stars)*8.0 + 7.0
-amp = np.random.randn(stars)*0.5
-period = np.random.randn(stars)*10 + 3.4
-noise = np.random.randn(epochs)
+#mag0 = np.arange(stars)*0.0
+mag0 = np.random.rand(stars)*8.0 + 7.0
+amp = np.random.randn(stars)*0.1
+period = np.random.rand(stars)*12 + 0.2
+noise = np.random.randn(epochs)*0.2
 phase = np.random.rand(stars)*2.0*np.pi
 
 for i in range(stars):
@@ -56,7 +56,7 @@ print "Using all PCs, MSE = %.6G" %(np.mean((M - Mhat)**2))
 # if we use only the first n PCs the reconstruction is less accurate
 level = 1
 
-k = 1
+k = 100
 
 Mhat2 = np.dot(U[:, :level], np.dot(S[:level, :level], V[:,:level].T))
 print "Using first %d PCs, MSE = %.6G" %(level, np.mean((M - Mhat2)**2))
@@ -74,12 +74,11 @@ ax3.scatter(t, M[:, k]-Mhat2[:, k], color='g')
 ax3.plot(x, amp[k]*np.sin(2*np.pi*x/period[k]+phase[k]),'r')
 ax3.axis('tight')
 
-ax4.semilogy(s)
+ax4.semilogy(s[:10])
 plt.show()
 
-#fig, [ax1, ax2, ax3] = plt.subplots(1, 3)
-#ax1.imshow(M)
-#ax2.imshow(M-Mhat)
-#ax3.imshow(V)
-#plt.show()
+fig, [ax1, ax2] = plt.subplots(2, 1)
+ax1.imshow(M)
+ax2.imshow(M-Mhat2)
+plt.show()
 

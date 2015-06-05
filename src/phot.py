@@ -41,12 +41,9 @@ class PhotTable(list):
         
         self.objid = objid
         
-        self.wifsip = DataSource(database='wifsip', user='sro', host='pina.aip.de')
-        
-        #self.data = []
+        self.wifsip = DataSource(database='stella', user='stella', host='pera.aip.de')
         
         keys = self.keys()
-        print keys
         valuearray = self.values()
         
         for value in valuearray:
