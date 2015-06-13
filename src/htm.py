@@ -4,6 +4,31 @@
 Created on Jun 12, 2015
 
 @author: Joerg Weingrill <jweingrill@aip.de>
+
+Revision History
+================
+
+$Log: HTMfunc.java,v $
+Revision 1.5  2003/02/19 15:46:11  womullan
+Updated comments mainly to make java docs better
+
+Revision 1.4  2003/02/14 21:46:22  womullan
+*** empty log message ***
+
+Revision 1.3  2003/02/14 16:46:00  womullan
+Newly organised classes in the new packages
+
+Revision 1.2  2003/02/11 18:40:27  womullan
+moving to new packages and names
+
+Revision 1.1  2003/02/07 23:02:51  womullan
+Major tidy up of HTM to HTMfunc addition of exceptions and error handler
+
+Revision 1.2  2003/02/07 19:36:03  womullan
+  new HTM for cc methods
+
+Revision 1.1  2003/02/05 23:00:07  womullan
+Added new timimig routines and HTM clas to do cc stuff from the c++ package
 '''
 import math
 import numpy as np
@@ -13,67 +38,39 @@ class HTMfunc(object):
     classdocs
     '''
     verbose = True
-    Pi = 3.1415926535897932385E0 
-    
-    sqrt3    = 1.7320508075688772935
     IDSIZE=64
     IDHIGHBIT = 1L << 63
     IDHIGHBIT2 = 1L << 63
-    HTMNAMEMAX = 32
-    gEpsilon = 1.0E-15
     HTM_INVALID_ID = 1
-
-
 
     def __init__(self, depth):
         '''
         Constructor
-
-
-        s0 = {1, 5, 2}; # S0
-        S_indexes[0] = s0;
-        s1 = {2, 5, 3}; # S1
-        S_indexes[1] = s1;
-        s2 = {3, 5, 4}; # S2
-        S_indexes[2] = s2;
-        s3 = {4, 5, 1};# S3
-        S_indexes[3] = s3;
-
         '''
         self.depth = depth
-        self.anchor= [[ 0.0,  0.0,  1.0], 
-                      [ 1.0,  0.0,  0.0], 
-                      [ 0.0,  1.0,  0.0], 
-                      [-1.0,  0.0,  0.0], 
-                      [ 0.0, -1.0,  0.0], 
-                      [ 0.0,  0.0, -1.0]]
+        self.name = ''
         self.S_indexes = [[1, 5, 2], [2, 5, 3], [3, 5, 4], [4, 5, 1]]
         self.N_indexes = [[1, 0, 4], [4, 0, 3], [3, 0, 2], [2, 0, 1]]
 
-    def startpane(v1, v2, v3, xin, yin, zin, name):
-        iS2 = 0
-        iN1 = 1
-        iS1 = 2
-        iN2 = 3
-        iS3 = 4
-        iN0 = 5
-        iS0 = 6
-        iN3 = 7
+    def startpane(self, xin, yin, zin):
+        """
+        where to start in the HTM quadtree when looking for a vectors home
+        xin yin zin are thin input vector
+        v1 v2 v3 and name are loaded with the initial triangle points
+        and the name of the triangle
+        """
+        if self.verbose: print 'starpane(%f,%f,%f) =' % (xin, yin, zin),
         if (xin > 0) and (yin >= 0):
-            if zin >= 0: baseindex = iN3 
-            else: baseindex = iS0
+            baseindex = 'N3' if zin >= 0 else 'S0'
         
         elif (xin <= 0) and (yin > 0):
-            if zin >= 0: baseindex = iN2 
-            else: baseindex = iS1
+            baseindex = 'N2' if zin >= 0 else 'S1'
         
         elif (xin < 0) and (yin <= 0):
-            if zin >= 0: baseindex = iN1 
-            else: baseindex = iS2
+            baseindex = 'N1' if zin >= 0 else 'S2'
         
         elif (xin >= 0) and (yin < 0):
-            if zin >= 0: baseindex = iN0 
-            else: baseindex = iS3
+            baseindex = 'N0' if zin >= 0 else 'S3'
         else:
             raise(ValueError)
 
@@ -86,91 +83,104 @@ class HTMfunc(object):
         bases["N0"] = [12, 1, 0, 4]
         bases["S0"] = [8, 1, 5, 2]
         bases["N3"] = [15, 2, 0, 1]
-    
+
+        anchor= [[ 0.0,  0.0,  1.0], 
+                  [ 1.0,  0.0,  0.0], 
+                  [ 0.0,  1.0,  0.0], 
+                  [-1.0,  0.0,  0.0], 
+                  [ 0.0, -1.0,  0.0], 
+                  [ 0.0,  0.0, -1.0]]
         
-        baseID = bases[baseindex].ID;
+        tvec = anchor[bases[baseindex][1]]
+        v1 = np.array(tvec)
         
-        tvec = (double[]) anchor[bases[baseindex].v1];
-        v1[0] = tvec[0];
-        v1[1] = tvec[1];
-        v1[2] = tvec[2];
+        tvec = anchor[bases[baseindex][2]]
+        v2 = np.array(tvec)
         
-        tvec = (double[])anchor[bases[baseindex].v2];
-        v2[0] = tvec[0];
-        v2[1] = tvec[1];
-        v2[2] = tvec[2];
+        tvec = anchor[bases[baseindex][3]]
+        v3 = np.array(tvec)
         
-        tvec = (double[])anchor[bases[baseindex].v3];
-        v3[0] = tvec[0];
-        v3[1] = tvec[1];
-        v3[2] = tvec[2];
-        
-        name.append(bases[baseindex].name);
-        return baseID;
-    }        
+        self.name = baseindex;
+        if self.verbose: print  v1,v2,v3
+        return v1, v2, v3;
 
     def m4_midpoint(self, v1, v2):
+        """
+        calculate midpoint fo vectors v1 and v2 the answer is put in
+        the provided w vector.
+        """
         w = v1 + v2
         tmp = math.sqrt(w[0] * w[0] + w[1] * w[1] + w[2]*w[2])
         w /= tmp
         return w
 
-    def lookup(self, x, y, z):
+    def _lookup(self, x, y, z):
+        """
+        for a given vector x,y,z return the HTM ID to the given depth
+        """
         
-        
-        name= ''
-        
-        v1 = np.zeros(3)
-        v2 = np.zeros(3)
-        v0 = np.zeros(3)
         w1 = np.zeros(3)
         w2 = np.zeros(3)
         w0 = np.zeros(3)
-        p =  np.zeros(3)
         
+        p = [x, y, z];
         
-        p[0] = x;
-        p[1] = y;
-        p[2] = z;
-
         # Get the ID of the level0 triangle, and its starting vertices
 
 
-        startid = self.startpane(v0, v1, v2, x, y, z, name);
+        v0,v1,v2 = self.startpane(x, y, z);
 
         """
         Start searching for the children
         """
         while(self.depth > 0):
             self.depth -= 1
-            w2 = self.m4_midpoint(v0, v1, w2)
-            w0 = self.m4_midpoint(v1, v2, w0)
-            w1 = self.m4_midpoint(v2, v0, w1)
+            w2 = self.m4_midpoint(v0, v1)
+            w0 = self.m4_midpoint(v1, v2)
+            w1 = self.m4_midpoint(v2, v0)
     
             if self.isinside(p, v0, w2, w1):
-                name += '0'
-                self.copy_vec(v1, w2)
-                self.copy_vec(v2, w1)
+                self.name += '0'
+                v1 = w2.copy()
+                v2 = w1.copy()
             elif self.isinside(p, v1, w0, w2):
-                name += '1'
-                self.copy_vec(v0, v1);
-                self.copy_vec(v1, w0);
-                self.copy_vec(v2, w2);
+                self.name += '1'
+                v0 = v1.copy()
+                v1 = w0.copy()
+                v2 = w2.copy()
             elif self.isinside(p, v2, w1, w0):
-                name += '2'
-                self.copy_vec(v0, v2);
-                self.copy_vec(v1, w1);
-                self.copy_vec(v2, w0);
+                self.name += '2'
+                v0 = v2.copy()
+                v1 = w1.copy()
+                v2 = w0.copy()
             elif self.isinside(p, w0, w1, w2):
-                name += '3'
-                self.copy_vec(v0, w0);
-                self.copy_vec(v1, w1);
-                self.copy_vec(v2, w2);
+                self.name += '3'
+                v0 = w0.copy()
+                v1 = w1.copy()
+                v2 = w2.copy()
             else:
                 raise(ValueError)
-        return name
+        return self.name
+
+    def _lookupId(self, x, y, z):
+        """
+        looks up the name of a vector x,y,z and converts the name to an id
+        """
+        name = self._lookup(x,y,z)
+        print '_lookup returned',name
+        return self.nameToId()
+
+    def lookup(self, ra, dec):
+        """
+        For given ra and dec lookup the HTMID to given depth
+        HTM works in vectors so this basically converts ra dec to a vector and
+        calls lookup for the vector.
+        """
+        x,y,z = self.radecToVector(ra,dec)
+        return self._lookup(x, y, z)
     
     def radecToVector(self, ra, dec):
+        """convert ra dec to a vector"""
         Epsilon = 1.0E-15
         
         vec = np.zeros(3)
@@ -218,23 +228,106 @@ class HTMfunc(object):
                 vec[0:2] = [0.0, -1.0]
             return vec;
         
-        vec[0] = math.cos((ra * math.pi) / 180.0) * cd;
-        vec[1] = math.sin((ra * math.pi) / 180.0) * cd;
-        return vec;
-
-    
-#    def lookup(self, ra, dec):
-#        v = self.radecToVector(ra,dec)
-#        return v
+        vec[0] = math.cos((ra * math.pi) / 180.0) * cd
+        vec[1] = math.sin((ra * math.pi) / 180.0) * cd
+        return vec
     
     def lookupId(self, ra, dec):
+        """
+        same as lookup but converts the name to an id
+        """
         Pr = math.pi/180.0
-        cd = math.cos(dec * Pr);
-        x = math.cos(ra * Pr) * cd;
-        y = math.sin(ra * Pr) * cd;
-        z = math.sin(dec * Pr);
-        return np.array([x,y,z])   
+        cd = math.cos(dec * Pr)
+        x = math.cos(ra * Pr) * cd
+        y = math.sin(ra * Pr) * cd
+        z = math.sin(dec * Pr)
+        return self._lookupId(x, y, z) 
+    
+    def isinside(self, p, v1, v2, v3): # p need not be normalized!!!
+        """
+        for a given vector p is it contained in the triangle whose corners are
+        given by the vectors v1, v2,v3.
+        """
+        gEpsilon = 1.0E-15
+        
+        crossp = np.cross(v1, v2)
+        if (p[0] * crossp[0] + p[1] * crossp[1] + p[2] * crossp[2] < -gEpsilon):
+            return False
+
+        crossp = np.cross(v2, v3)
+        if (p[0] * crossp[0] + p[1] * crossp[1] + p[2] * crossp[2] < -gEpsilon):
+            return False
+
+        crossp = np.cross(v3, v1)
+        if (p[0] * crossp[0] + p[1] * crossp[1] + p[2] * crossp[2] < -gEpsilon):
+            return False
+
+        return True;
+    
+    def nameToId(self):
+        """
+        * for a given name i.e. N301022 convert it to its 64bit htmId
+        *  effectively this walks trough the string in reverse order and
+        * sets the bits of a long number according to the charector in the
+        * String.
+    
+           The  name has always the same structure, it begins with
+           an N or S, indicating north or south cap and then numbers 0-3 follow
+           indicating which child to descend into. So for a depth-5-index we have
+           strings like
+                     N012023  S000222  N102302  etc
+    
+           Each of the numbers correspond to 2 bits of code (00 01 10 11) in the
+           uint64. The first two bits are 10 for S and 11 for N. For example
+    
+                     N 0 1 2 0 2 3
+                     11000110001011  =  12683 (dec)
+    
+           The leading bits are always 0
+    
+        """
+        HTMNAMEMAX = 32
+
+        if self.name == None or len(self.name) == 0: # null pointer-name
+            raise(ValueError)
+        if not self.name[0] in ['N','S']:  # invalid name
+            raise(ValueError)
+
+        siz =len(self.name)       # determine string length
+        # at least size-2 required, don't exceed max
+        if siz < 2:
+            raise(ValueError)
+        if siz > HTMNAMEMAX:
+            raise(ValueError)
+        print self.name, siz
+        out = 0
+        for i in range(siz-1, 0, -1):
+            # set bits starting from the end
+            print self.name[i],
+            if self.name[i] > '3' or self.name[i] < '0': 
+                # invalid name
+                raise(ValueError)
+
+            out +=  int(self.name[i]) << 2*(siz - i -1)
+
+        i = 2 # set first pair of bits, first bit always set
+        if self.name[0] == 'N': 
+            i += 1 # for north set second bit too
+        last = i << (2*siz - 2)
+        out += last
+        return out
+    
+    def idLevel(self, htmid):
+        pass
+    
+    def idToName(self, id):
+        pass
+    
+    def nameToTriangle(self, name):
+        pass
+     
     
 h = HTMfunc(depth = 10) 
-print h.lookup(123.5, -5.123)
+#print h.lookup(123.5, -5.123)
 print h.lookupId(123.5, -5.123)
+print h.lookupId(123.5, 10.5)
