@@ -37,11 +37,8 @@ class HTMfunc(object):
     '''
     classdocs
     '''
-    verbose = True
-    IDSIZE=64
-    IDHIGHBIT = 1L << 63
-    IDHIGHBIT2 = 1L << 63
-    HTM_INVALID_ID = 1
+    verbose = False
+    #HTM_INVALID_ID = 1
 
     def __init__(self, depth):
         '''
@@ -49,8 +46,8 @@ class HTMfunc(object):
         '''
         self.depth = depth
         self.name = ''
-        self.S_indexes = [[1, 5, 2], [2, 5, 3], [3, 5, 4], [4, 5, 1]]
-        self.N_indexes = [[1, 0, 4], [4, 0, 3], [3, 0, 2], [2, 0, 1]]
+        #self.S_indexes = [[1, 5, 2], [2, 5, 3], [3, 5, 4], [4, 5, 1]]
+        #self.N_indexes = [[1, 0, 4], [4, 0, 3], [3, 0, 2], [2, 0, 1]]
 
     def startpane(self, xin, yin, zin):
         """
@@ -59,7 +56,7 @@ class HTMfunc(object):
         v1 v2 v3 and name are loaded with the initial triangle points
         and the name of the triangle
         """
-        if self.verbose: print 'starpane(%f,%f,%f) =' % (xin, yin, zin),
+        if self.verbose: print 'startpane(%f,%f,%f) =' % (xin, yin, zin),
         if (xin > 0) and (yin >= 0):
             baseindex = 'N3' if zin >= 0 else 'S0'
         
@@ -91,6 +88,7 @@ class HTMfunc(object):
                   [ 0.0, -1.0,  0.0], 
                   [ 0.0,  0.0, -1.0]]
         
+        self.baseID = bases[baseindex][0]
         tvec = anchor[bases[baseindex][1]]
         v1 = np.array(tvec)
         
@@ -133,8 +131,9 @@ class HTMfunc(object):
         """
         Start searching for the children
         """
-        while(self.depth > 0):
-            self.depth -= 1
+        depth = self.depth
+        while(depth > 0):
+            depth -= 1
             w2 = self.m4_midpoint(v0, v1)
             w0 = self.m4_midpoint(v1, v2)
             w1 = self.m4_midpoint(v2, v0)
@@ -167,7 +166,7 @@ class HTMfunc(object):
         looks up the name of a vector x,y,z and converts the name to an id
         """
         name = self._lookup(x,y,z)
-        print '_lookup returned',name
+        if self.verbose: print '_lookup returned',name
         return self.nameToId()
 
     def lookup(self, ra, dec):
@@ -299,11 +298,12 @@ class HTMfunc(object):
             raise(ValueError)
         if siz > HTMNAMEMAX:
             raise(ValueError)
-        print self.name, siz
+        
+        if self.verbose: print self.name, siz
+        
         out = 0
         for i in range(siz-1, 0, -1):
             # set bits starting from the end
-            print self.name[i],
             if self.name[i] > '3' or self.name[i] < '0': 
                 # invalid name
                 raise(ValueError)
@@ -318,10 +318,78 @@ class HTMfunc(object):
         return out
     
     def idLevel(self, htmid):
-        pass
+        """
+        idLevel is a trusting method (assumes that the id is well formed and
+        valid) that returns the level of the trixel represented by the given
+        64 bit htmId.
+        This determines the index of the first bit set by continually left
+        shifting the htmid 2 bits at a time until a set bit is found in the
+        highest position.
+        2 bits are used as each number in an HTM Name like N012 is represented
+        by two bits.
+        Also the number of bits used dived by two is the level of the htmId +2
+        we have +2 because of the N0,S1 etc  prefixes.
+        So an id with bit 64 set is level 30 (64/2 -2)
+        """
+        IDSIZE = 64
+        IDHIGHBIT = 1L << 63
+        
+        # determine index of first set bit
+        for i in range(0, IDSIZE, 2):
+            if  ((htmid << i) & IDHIGHBIT )> 0:
+                break
+        size=(IDSIZE-i) >> 1
+        """
+        Size is the length of the string representing the name of the
+           trixel, the level is size - 2
+        """
+        return size-2
     
     def idToName(self, id):
-        pass
+        """
+        Walk the bits of the id and convert it to a string like N012.
+        sucessivley look at each pair of bits and convert it to 0,1,2 or 3.
+        Finally use the highest bit to set N or S in the string.
+    
+        The first bit pair gives N (11) or S (10).
+        The subsequent bit-pairs give the numbers 0-3: (00, 01, 10, 11).
+
+        Example: In the first level there are 8 nodes, and we get
+        the names from numbers 8 through 15 giving S0,S1,S2,S3,N0,N1,N2,N3.
+
+        The order is always ascending starting from S0000.. to N3333...
+        """
+        IDSIZE = 64
+        IDHIGHBIT = 1L << 63
+        IDHIGHBIT2 = 1L << 63
+    
+
+        # determine index of first set bit
+        for i in range(0,IDSIZE,2):
+            x8 = ((id << i) & IDHIGHBIT)
+            x4 = ((id << i) & IDHIGHBIT2)
+            if ( x8 != 0 ): 
+                break;
+            if (x4 != 0): # invalid id
+                raise(ValueError)
+        
+        if (id == 0): raise(ValueError)
+        size=(IDSIZE-i) >> 1
+
+        name = '             '
+        #fill characters starting with the last one
+        for i in range(size):
+            c =  '%d' % ((id >> i*2) & 3)
+            name[size-i-1] = c;
+
+
+        # put in first character
+        if ((id >> (size*2-2)) & 1) > 0:
+            name[0] = 'N'
+        else:
+            name[0] = 'S'
+
+        return name;
     
     def nameToTriangle(self, name):
         pass
@@ -331,3 +399,4 @@ h = HTMfunc(depth = 10)
 #print h.lookup(123.5, -5.123)
 print h.lookupId(123.5, -5.123)
 print h.lookupId(123.5, 10.5)
+print h.lookupId(123.5, 10.1)
