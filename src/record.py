@@ -11,7 +11,6 @@ class Record(object):
     Record class to access records in a table by their key or their column
     '''
 
-
     def __init__(self, key=None, columns=None):
         '''
         key needs to be a string
