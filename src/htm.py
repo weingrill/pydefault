@@ -392,6 +392,11 @@ class HTMfunc(object):
         return name;
     
     def nameToTriangle(self, name):
+        """
+        Like name2Id but instaed of returning the htmId
+        return v0,v1,v2 vetors representin the corners of the trinagle
+        @return Object[] which is holding 3 double[] for v0 v1 v2
+        """
         pass
      
     
