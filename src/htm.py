@@ -37,7 +37,6 @@ class HTMfunc(object):
     '''
     classdocs
     '''
-    verbose = False
     #HTM_INVALID_ID = 1
 
     def __init__(self, depth):
@@ -56,7 +55,6 @@ class HTMfunc(object):
         v1 v2 v3 and name are loaded with the initial triangle points
         and the name of the triangle
         """
-        if self.verbose: print 'startpane(%f,%f,%f) =' % (xin, yin, zin),
         if (xin > 0) and (yin >= 0):
             baseindex = 'N3' if zin >= 0 else 'S0'
         
@@ -81,12 +79,12 @@ class HTMfunc(object):
         bases["S0"] = [8, 1, 5, 2]
         bases["N3"] = [15, 2, 0, 1]
 
-        anchor= [[ 0.0,  0.0,  1.0], 
-                  [ 1.0,  0.0,  0.0], 
-                  [ 0.0,  1.0,  0.0], 
-                  [-1.0,  0.0,  0.0], 
-                  [ 0.0, -1.0,  0.0], 
-                  [ 0.0,  0.0, -1.0]]
+        anchor= [np.array([ 0.0,  0.0,  1.0]), 
+                 np.array([ 1.0,  0.0,  0.0]), 
+                 np.array([ 0.0,  1.0,  0.0]), 
+                 np.array([-1.0,  0.0,  0.0]), 
+                 np.array([ 0.0, -1.0,  0.0]), 
+                 np.array([ 0.0,  0.0, -1.0])]
         
         self.baseID = bases[baseindex][0]
         tvec = anchor[bases[baseindex][1]]
@@ -98,9 +96,8 @@ class HTMfunc(object):
         tvec = anchor[bases[baseindex][3]]
         v3 = np.array(tvec)
         
-        self.name = baseindex;
-        if self.verbose: print  v1,v2,v3
-        return v1, v2, v3;
+        self.name = baseindex
+        return v1, v2, v3
 
     def m4_midpoint(self, v1, v2):
         """
@@ -108,7 +105,7 @@ class HTMfunc(object):
         the provided w vector.
         """
         w = v1 + v2
-        tmp = math.sqrt(w[0] * w[0] + w[1] * w[1] + w[2]*w[2])
+        tmp = np.sqrt(np.sum(w**2))
         w /= tmp
         return w
 
@@ -121,12 +118,12 @@ class HTMfunc(object):
         w2 = np.zeros(3)
         w0 = np.zeros(3)
         
-        p = [x, y, z];
+        p = [x, y, z]
         
         # Get the ID of the level0 triangle, and its starting vertices
 
 
-        v0,v1,v2 = self.startpane(x, y, z);
+        v0,v1,v2 = self.startpane(x, y, z)
 
         """
         Start searching for the children
@@ -165,8 +162,7 @@ class HTMfunc(object):
         """
         looks up the name of a vector x,y,z and converts the name to an id
         """
-        name = self._lookup(x,y,z)
-        if self.verbose: print '_lookup returned',name
+        self.name = self._lookup(x, y, z)
         return self.nameToId()
 
     def lookup(self, ra, dec):
@@ -185,17 +181,11 @@ class HTMfunc(object):
         vec = np.zeros(3)
         cd = math.cos( (dec * math.pi) / 180.0)
 
-        diff = 90.0 - dec
+        if abs(90.0 - dec) < Epsilon:
+            return np.array([1.0, 0.0,1.0])
 
-        if (diff < Epsilon and diff > -Epsilon):
-            vec = np.array([1.0, 0.0,1.0])
-            return vec
-
-        diff = -90.0 - dec
-        
-        if (diff < Epsilon and diff > -Epsilon):
-            vec = np.array([1.0, 0.0, -1.0])
-            return vec;
+        if abs(-90.0 - dec) < Epsilon:
+            return np.array([1.0, 0.0, -1.0])
         
         vec[2] = math.sin((dec* math.pi) / 180.0)
         quadrant = ra / 90.0 # how close is it to an integer?
@@ -214,7 +204,7 @@ class HTMfunc(object):
         
         if abs(qint - quadrant) < Epsilon:
             iint = int(qint)
-            iint %= 4;
+            iint %= 4
             if (iint < 0): iint += 4
 
             if iint==0:
@@ -225,7 +215,7 @@ class HTMfunc(object):
                 vec[0:2] = [-1.0, 0.0]
             elif iint == 3:
                 vec[0:2] = [0.0, -1.0]
-            return vec;
+            return vec
         
         vec[0] = math.cos((ra * math.pi) / 180.0) * cd
         vec[1] = math.sin((ra * math.pi) / 180.0) * cd
@@ -245,23 +235,23 @@ class HTMfunc(object):
     def isinside(self, p, v1, v2, v3): # p need not be normalized!!!
         """
         for a given vector p is it contained in the triangle whose corners are
-        given by the vectors v1, v2,v3.
+        given by the vectors v1, v2, v3.
         """
         gEpsilon = 1.0E-15
         
         crossp = np.cross(v1, v2)
-        if (p[0] * crossp[0] + p[1] * crossp[1] + p[2] * crossp[2] < -gEpsilon):
+        if (np.dot(p, crossp) < -gEpsilon):
             return False
 
         crossp = np.cross(v2, v3)
-        if (p[0] * crossp[0] + p[1] * crossp[1] + p[2] * crossp[2] < -gEpsilon):
+        if (np.dot(p, crossp) < -gEpsilon):
             return False
 
         crossp = np.cross(v3, v1)
-        if (p[0] * crossp[0] + p[1] * crossp[1] + p[2] * crossp[2] < -gEpsilon):
+        if (np.dot(p, crossp) < -gEpsilon):
             return False
 
-        return True;
+        return True
     
     def nameToId(self):
         """
@@ -298,8 +288,6 @@ class HTMfunc(object):
             raise(ValueError)
         if siz > HTMNAMEMAX:
             raise(ValueError)
-        
-        if self.verbose: print self.name, siz
         
         out = 0
         for i in range(siz-1, 0, -1):
@@ -345,7 +333,7 @@ class HTMfunc(object):
         """
         return size-2
     
-    def idToName(self, id):
+    def idToName(self, htmid):
         """
         Walk the bits of the id and convert it to a string like N012.
         sucessivley look at each pair of bits and convert it to 0,1,2 or 3.
@@ -366,30 +354,30 @@ class HTMfunc(object):
 
         # determine index of first set bit
         for i in range(0,IDSIZE,2):
-            x8 = ((id << i) & IDHIGHBIT)
-            x4 = ((id << i) & IDHIGHBIT2)
+            x8 = ((htmid << i) & IDHIGHBIT)
+            x4 = ((htmid << i) & IDHIGHBIT2)
             if ( x8 != 0 ): 
-                break;
+                break
             if (x4 != 0): # invalid id
                 raise(ValueError)
         
-        if (id == 0): raise(ValueError)
+        if (htmid == 0): raise(ValueError)
         size=(IDSIZE-i) >> 1
 
-        name = '             '
+        name = ''
         #fill characters starting with the last one
         for i in range(size):
-            c =  '%d' % ((id >> i*2) & 3)
-            name[size-i-1] = c;
+            c =  '%d' % ((htmid >> i*2) & 3)
+            name = c + name
 
 
         # put in first character
-        if ((id >> (size*2-2)) & 1) > 0:
-            name[0] = 'N'
+        if ((htmid >> (size*2-2)) & 1) > 0:
+            name = 'N' + name
         else:
-            name[0] = 'S'
+            name = 'S' + name
 
-        return name;
+        return name
     
     def nameToTriangle(self, name):
         """
@@ -397,11 +385,119 @@ class HTMfunc(object):
         return v0,v1,v2 vetors representin the corners of the trinagle
         @return Object[] which is holding 3 double[] for v0 v1 v2
         """
-        pass
+        S_indexes = [np.array([1, 5, 2]), 
+                     np.array([2, 5, 3]), 
+                     np.array([3, 5, 4]), 
+                     np.array([4, 5, 1])]
+        N_indexes = [np.array([1, 0, 4]), 
+                     np.array([4, 0, 3]), 
+                     np.array([3, 0, 2]), 
+                     np.array([2, 0, 1])]
+       
+        # Get the top level hemi-demi-semi space
+        
+        anchor_offsets= np.zeros(3)
+        k = int(name[1])
+
+        if name[0] == 'S': 
+            anchor_offsets = S_indexes[k]
+        else:
+            anchor_offsets = N_indexes[k]
+
+        anchor= [np.array([ 0.0,  0.0,  1.0]), 
+                 np.array([ 1.0,  0.0,  0.0]), 
+                 np.array([ 0.0,  1.0,  0.0]), 
+                 np.array([-1.0,  0.0,  0.0]), 
+                 np.array([ 0.0, -1.0,  0.0]), 
+                 np.array([ 0.0,  0.0, -1.0])]
+
+        v0 = anchor[anchor_offsets[0]].copy()
+        v1 = anchor[anchor_offsets[1]].copy()
+        v2 = anchor[anchor_offsets[2]].copy()
+        
+        offset = 2
+        while offset < len(name):
+            s = name[offset]
+            w2 = self.m4_midpoint(v0, v1)
+            w0 = self.m4_midpoint(v1, v2)
+            w1 = self.m4_midpoint(v2, v0)
+            if s == '0':
+                v1 = w2.copy()
+                v2 = w1.copy()
+                break
+            elif s == '1':
+                v0 = v1.copy()
+                v1 = w0.copy()
+                v2 = w2.copy()
+                break
+            elif s == '2':
+                v0 = v2.copy()
+                v1 = w1.copy()
+                v2 = w0.copy()
+                break
+            elif s == '3':
+                v0 = w0.copy()
+                v1 = w1.copy()
+                v2 = w2.copy()
+                break
+            offset += 1
+        return [v0,v1,v2]
+
+    def _idToPoint(self, name):
+        """
+        for a given ID get back the approximate center of the triangle.
+        This may be used as an inverse of lookup however bear in mind many points
+        may fall in a triangle while only the center point will be returned from
+        this function.
+        The name is used to get the triange corners and these are then averaged
+        to get a center point.
+        The resultant vector is not normalized.
+        """
+        tri = self.nameToTriangle(name)
+        center = np.sum(tri,axis=0)
+        csum = np.sqrt(np.sum(center**2))
+        center /= csum
+        
+        return center # I don't want it nomralized or radec to be set,
+
+    def idToPoint(self, htmId):
+        """
+        gets the name from the id and calls idToPoint with it.
+        """
+        name = self.idToName(htmId)
+        return self._idToPoint(name)
+
+    def _distance(self, v1, v2):
+        """
+        return the angular distance between two vectors
+        ACOS (V1 . V2)
+        """
+        return math.acos(np.dot(v1,v2))
+
+    def distance(self, htmId1, htmId2):
+        """
+        return the angular distance between two htmids
+        gets the vectors of the mid points and uses thoose to compute distance
+        """
+        if type(htmId1) is int:               
+            v1 = self.idToPoint(htmId1)
+            v2 = self.idToPoint(htmId2)
+            return self._distance(v1,v2)
+        
+        elif type(htmId1) is str:
+            v1 = self.idToPoint(htmId1)
+            v2 = self.idToPoint(htmId2)
+            return self._distance(v1,v2)
+        
+        else:
+            raise(TypeError)
      
     
 h = HTMfunc(depth = 10) 
 #print h.lookup(123.5, -5.123)
 print h.lookupId(123.5, -5.123)
+assert (h.lookupId(123.5, 10.5) == 15331180)
 print h.lookupId(123.5, 10.5)
 print h.lookupId(123.5, 10.1)
+assert(h.lookupId(123.5, 10.5) <> h.lookupId(123.5, 10.1))
+print h.distance(15331180,15331153)*3600*180/np.pi
