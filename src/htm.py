@@ -37,7 +37,6 @@ class HTMfunc(object):
     '''
     classdocs
     '''
-    #HTM_INVALID_ID = 1
 
     def __init__(self, depth):
         '''
@@ -45,8 +44,6 @@ class HTMfunc(object):
         '''
         self.depth = depth
         self.name = ''
-        #self.S_indexes = [[1, 5, 2], [2, 5, 3], [3, 5, 4], [4, 5, 1]]
-        #self.N_indexes = [[1, 0, 4], [4, 0, 3], [3, 0, 2], [2, 0, 1]]
 
     def startpane(self, xin, yin, zin):
         """
@@ -96,6 +93,7 @@ class HTMfunc(object):
         tvec = anchor[bases[baseindex][3]]
         v3 = np.array(tvec)
         
+        self.baseindex = baseindex
         self.name = baseindex
         return v1, v2, v3
 
@@ -179,7 +177,7 @@ class HTMfunc(object):
         Epsilon = 1.0E-15
         
         vec = np.zeros(3)
-        cd = math.cos( (dec * math.pi) / 180.0)
+        cd = math.cos( dec * math.pi / 180.0)
 
         if abs(90.0 - dec) < Epsilon:
             return np.array([1.0, 0.0,1.0])
@@ -187,7 +185,7 @@ class HTMfunc(object):
         if abs(-90.0 - dec) < Epsilon:
             return np.array([1.0, 0.0, -1.0])
         
-        vec[2] = math.sin((dec* math.pi) / 180.0)
+        vec[2] = math.sin(dec* math.pi / 180.0)
         quadrant = ra / 90.0 # how close is it to an integer?
         """
         if quadrant is (almost) an integer, force x, y to particular
@@ -217,19 +215,19 @@ class HTMfunc(object):
                 vec[0:2] = [0.0, -1.0]
             return vec
         
-        vec[0] = math.cos((ra * math.pi) / 180.0) * cd
-        vec[1] = math.sin((ra * math.pi) / 180.0) * cd
+        vec[0] = math.cos(ra * math.pi / 180.0) * cd
+        vec[1] = math.sin(ra * math.pi / 180.0) * cd
         return vec
     
     def lookupId(self, ra, dec):
         """
         same as lookup but converts the name to an id
         """
-        Pr = math.pi/180.0
-        cd = math.cos(dec * Pr)
-        x = math.cos(ra * Pr) * cd
-        y = math.sin(ra * Pr) * cd
-        z = math.sin(dec * Pr)
+        ra *= math.pi/180.0
+        dec *= math.pi/180.0
+        x = math.cos(dec) * math.cos(ra)
+        y = math.cos(dec) * math.sin(ra)
+        z = math.sin(dec)
         return self._lookupId(x, y, z) 
     
     def isinside(self, p, v1, v2, v3): # p need not be normalized!!!
@@ -414,7 +412,6 @@ class HTMfunc(object):
         v0 = anchor[anchor_offsets[0]].copy()
         v1 = anchor[anchor_offsets[1]].copy()
         v2 = anchor[anchor_offsets[2]].copy()
-        
         offset = 2
         while offset < len(name):
             s = name[offset]
@@ -422,24 +419,21 @@ class HTMfunc(object):
             w0 = self.m4_midpoint(v1, v2)
             w1 = self.m4_midpoint(v2, v0)
             if s == '0':
+                #v0 = v0 
                 v1 = w2.copy()
                 v2 = w1.copy()
-                break
             elif s == '1':
                 v0 = v1.copy()
                 v1 = w0.copy()
                 v2 = w2.copy()
-                break
             elif s == '2':
                 v0 = v2.copy()
                 v1 = w1.copy()
                 v2 = w0.copy()
-                break
             elif s == '3':
                 v0 = w0.copy()
                 v1 = w1.copy()
                 v2 = w2.copy()
-                break
             offset += 1
         return [v0,v1,v2]
 
@@ -454,17 +448,17 @@ class HTMfunc(object):
         The resultant vector is not normalized.
         """
         tri = self.nameToTriangle(name)
-        center = np.sum(tri,axis=0)
+        center = np.sum(tri, axis=0)
         csum = np.sqrt(np.sum(center**2))
         center /= csum
         
         return center # I don't want it nomralized or radec to be set,
 
-    def idToPoint(self, htmId):
+    def idToPoint(self, htmid):
         """
         gets the name from the id and calls idToPoint with it.
         """
-        name = self.idToName(htmId)
+        name = self.idToName(htmid)
         return self._idToPoint(name)
 
     def _distance(self, v1, v2):
@@ -491,13 +485,60 @@ class HTMfunc(object):
         
         else:
             raise(TypeError)
-     
     
-h = HTMfunc(depth = 10) 
-#print h.lookup(123.5, -5.123)
-print h.lookupId(123.5, -5.123)
-assert (h.lookupId(123.5, 10.5) == 15331180)
-print h.lookupId(123.5, 10.5)
-print h.lookupId(123.5, 10.1)
-assert(h.lookupId(123.5, 10.5) <> h.lookupId(123.5, 10.1))
-print h.distance(15331180,15331153)*3600*180/np.pi
+    def Vectortoradec(self, x):
+        """
+        convert the cartesian coodinates x 
+        to spherical coordinates lamb, beta and r
+        """
+        
+        r = np.sqrt(np.sum(x**2))
+        rho = np.sqrt(np.sum(x[0:2]**2))
+        
+        if rho == 0:
+            if x[2] > 0: beta = 90.0
+            if x[2] ==0 : beta = 0.0
+            if x[2] < 0: beta = -90
+        else:
+            beta = math.atan2(x[2], rho) * 180.0 / math.pi
+        
+        phi = 2.0 * math.atan2(x[1], abs(x[0])+rho) * 180.0 / math.pi
+        
+        if x[0] == 0.0 and x[1] == 0.0:
+            lamb = 0.0
+        if x[0] >= 0.0 and x[1] >= 0.0:
+            lamb = phi
+        if x[0] >= 0.0 and x[1] < 0.0:
+            lamb = 360 + phi
+        if x[0] < 0.0:
+            lamb = 180 - phi
+        
+        return lamb, beta, r
+
+if __name__ == '__main__':
+    h = HTMfunc(depth = 8) 
+    
+    ra0 = 0.0; dec0 = 0.0
+    htmid = h.lookupid(ra0, dec0)
+    print h.baseindex
+    print h.baseID
+    print h.name
+    print 'id = %d' % htmid
+    x = h.idToPoint(htmid)
+    print 'x = %.4f, %.4f, %.4f' % (x[0], x[1], x[2])
+
+    x1 = h.radecToVector(ra0, dec0)
+    print 'x1 = %.4f, %.4f, %.4f' % (x1[0], x1[1], x1[2])
+
+    
+    ra, dec, r = h.Vectortoradec(x) 
+    print 'ra, dec = %.4f, %.4f, %.6f' % (ra, dec, r)
+    
+    
+   
+    #import esutil
+    #h1 = esutil.htm.HTM(8)
+    #htmid1 = h1.lookup_id(ra0, dec0)[0] 
+    #print htmid1
+    
+    
