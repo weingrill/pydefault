@@ -94,11 +94,12 @@ class Telescope(object):
         diameter and focal length in meters 
         an optional given name overrides the diameter and the focallength
         """
-        teldb = {'C11':(0.2794,2.794), 
-                 'MTO1000':(0.1,1.0),
-                 'Cassegrain50':(0.5,7.5),
-                 'Zeiss110':(0.11,0.11*7.5),
-                 'BMK':(0.30,0.75)}
+        teldb = {'C11':          (0.2794, 2.794), 
+                 'MTO1000':      (0.1, 1.0),
+                 'Cassegrain50': (0.5, 7.5),
+                 'Zeiss110':     (0.11, 0.11*7.5),
+                 'BMK':          (0.30, 0.75),
+                 'ETX':          (0.08, 0.4)}
         if name in teldb:
             diameter, focallength = teldb[name]
         self.diameter = diameter
@@ -181,3 +182,11 @@ if __name__ == '__main__':
     print 'FOV: %f x %f' % (radtodeg(ccd.fieldofview(bmk)[1]),radtodeg(ccd.fieldofview(bmk)[2]))
     print 'BMK resolution: %f"' % radtoarcsec(bmk.resolution())
     print 'BMK resolution: %f"' % radtoarcsec(ccd.pixelfov(bmk))
+
+    print 'ETX:'
+    etx = Telescope(0.08, 0.4, name='ETX')
+    minmag, maxmag = etx.magnification(maxpupil = 0.007)
+    print '%i ... %i' % (minmag,maxmag)
+    print 'ideal: %i mm' % (1000.0*etx.focallength/60.0)
+    print '%.1f mm ... %.1f mm' % (1000.0*etx.focallength/minmag, 1000.0*etx.focallength/maxmag)
+    
