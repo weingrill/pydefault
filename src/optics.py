@@ -136,7 +136,7 @@ class Telescope(object):
         return 5*log10(self.diameter) + 2.7   
  
 class Eyepiece(object):
-    def __init__(self, focallength, fov):
+    def __init__(self, focallength, fov = 55):
         """
         focal length in meters
         fov in degrees
@@ -155,26 +155,27 @@ class Eyepiece(object):
 
 if __name__ == '__main__':
     c11 = Telescope(0.0, 0.0, name='C11')
-    minmag, maxmag = c11.magnification(maxpupil = 0.007)
+    minmag, maxmag = c11.magnification(maxpupil = 0.0075)
     print 'C11:'
     print '%i ... %i' % (minmag,maxmag)
     print 'ideal: %i mm' % (1000.0*c11.focallength/60.0)
     print 1000.0*c11.focallength/minmag, 1000.0*c11.focallength/maxmag, 'mm'
     
-    print 'Cassegrain 50:'
+    print '\nCassegrain 50:'
     zeiss50 = Telescope(0.0, 0.0, name='Cassegrain50')
-    maxmag = zeiss50.magnification()[1]
+    minmag,maxmag = zeiss50.magnification()
+    print '%i fach ... %i fach' % (minmag,maxmag)
     print 'ideal: %i mm' % (1000.0*zeiss50.focallength/60.0)
-    print 1000.0*zeiss50.focallength/maxmag, 'mm'
+    print 'Okularbrennweite: %.1f mm ... %.1f mm' % (1000.0*zeiss50.focallength/minmag, 1000.0*zeiss50.focallength/maxmag)
     
-    print 'Meade 8":'
+    print '\nMeade 8":'
     meade = Telescope(0.2, 1.2)
     minmag, maxmag = meade.magnification(maxpupil = 0.007)
     print '%i ... %i' % (minmag,maxmag)
     print 'ideal: %i mm' % (1000.0*meade.focallength/60.0)
     print 1000.0*meade.focallength/minmag, 1000.0*meade.focallength/maxmag, 'mm'
     
-    print 'BMK:'
+    print '\nBMK:'
     bmk = Telescope(0.3, 0.75, name='BMK')
     print '1/f: %f' % bmk.focalratio
     ccd = Detector([10560,10560],9e-6)
@@ -183,10 +184,10 @@ if __name__ == '__main__':
     print 'BMK resolution: %f"' % radtoarcsec(bmk.resolution())
     print 'BMK resolution: %f"' % radtoarcsec(ccd.pixelfov(bmk))
 
-    print 'ETX:'
-    etx = Telescope(0.08, 0.4, name='ETX')
+    print '\nETX:'
+    etx = Telescope(0.07, 0.35, name='ETX')
     minmag, maxmag = etx.magnification(maxpupil = 0.007)
     print '%i ... %i' % (minmag,maxmag)
     print 'ideal: %i mm' % (1000.0*etx.focallength/60.0)
-    print '%.1f mm ... %.1f mm' % (1000.0*etx.focallength/minmag, 1000.0*etx.focallength/maxmag)
+    print 'Okularbrennweite: %.1f mm ... %.1f mm' % (1000.0*etx.focallength/minmag, 1000.0*etx.focallength/maxmag)
     
