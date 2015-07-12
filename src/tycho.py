@@ -6,13 +6,12 @@ Created on Oct 17, 2013
 def tycho(ra_center, dec_center, fov = 1.0, grid=True, background=True, show=True):
     import matplotlib.pyplot as plt
 
-    import pylab
     from functions import scaleto
     from numpy import clip, array
     from datasource import DataSource
     from pylab.cm import Spectral  # @UnresolvedImport
     
-    tycho = DataSource(database='wifsip', host='pina', user='sro')
+    tycho = DataSource(database='stella', host='pera.aip.de', user='stella')
     query = """select mradeg, mdedeg, vt, bt-vt
          from tycho where circle(point(%f,%f),%f) @> circle(coord,0)
          and not bt-vt is null;""" % (ra_center, dec_center, fov)
