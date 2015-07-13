@@ -131,6 +131,7 @@ class Telescope(object):
         """returns the minimum and the maximum magnifications"""
         return (self.diameter/maxpupil, self.diameter/minpupil) 
     
+    @property
     def limitingmagnitude(self):
         from math import log10
         return 5*log10(self.diameter) + 2.7   
