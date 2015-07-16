@@ -79,7 +79,11 @@ class Record(object):
     
     def __call__(self, **kwargs):
         key, value = kwargs.items()[0]
-        return [row for row in self.table if row[key] == value]
+        childrecord = Record(key = self.key, columns = self.columns)
+        for row in self.table: 
+            if row[key] == value:
+                childrecord.append(row)
+        return childrecord
 
     def __str__(self):
         s = ''
