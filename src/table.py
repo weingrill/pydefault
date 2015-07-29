@@ -53,14 +53,14 @@ class Table(object):
         Record[1] returns the second record
         Record[1:3] returns record 1 and 2 (the second and the third)
         """
-        
+        from numpy import array
         if type(keyvalue) == str:
             # try to find the key with keyvalue
             for row in self.table:
                 if row[self.key] == keyvalue:
                     return row
             if keyvalue in self.columns:
-                return [row[keyvalue] for row in self.table]
+                return array([row[keyvalue] for row in self.table])
             else:
                 raise(ValueError)
                     
@@ -69,7 +69,7 @@ class Table(object):
         
         elif type(keyvalue) == tuple:
             #print keyvalue[0]
-            return [row[keyvalue[1]] for row in self.table[keyvalue[0]]]
+            return array([row[keyvalue[1]] for row in self.table[keyvalue[0]]])
         else:
             print 'unknown type ', type(keyvalue)
             
