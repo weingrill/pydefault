@@ -146,12 +146,21 @@ class Eyepiece(object):
         self.fov = fov
     
     def magnification(self, telescope):
+        """
+        returns the magnification in times
+        """
         return telescope.focallength/self.focallength
     
     def exitpupil(self, telescope):
+        """
+        returns the exitpupil in meters
+        """
         return telescope.diameter/self.magnification(telescope)
     
     def truefov(self, telescope):
+        """
+        returns the true field of view in degrees
+        """
         return self.fov/self.magnification(telescope)
 
 if __name__ == '__main__':
@@ -168,6 +177,10 @@ if __name__ == '__main__':
     print '%i fach ... %i fach' % (minmag,maxmag)
     print 'ideal: %i mm' % (1000.0*zeiss50.focallength/60.0)
     print 'Okularbrennweite: %.1f mm ... %.1f mm' % (1000.0*zeiss50.focallength/minmag, 1000.0*zeiss50.focallength/maxmag)
+    tsed = Eyepiece(0.015)
+    print tsed.exitpupil(zeiss50)
+    print tsed.magnification(zeiss50)
+    print tsed.truefov(zeiss50)*60
     
     print '\nMeade 8":'
     meade = Telescope(0.2, 1.2)
