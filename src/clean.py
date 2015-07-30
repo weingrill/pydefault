@@ -11,9 +11,9 @@ from matplotlib import pyplot as plt
 def dft(t, x):
     N = np.shape(t)[0]
     df = 1/(2*(t[-1]-t[0]))
-    k = 3
+    k = 4
     j = np.arange(-k*N, k*N)
-    f = j*df
+    f = j*df/k
     A = np.ones([N, 2*k*N], dtype = complex)
     
     A = A * (-2.j * np.pi * f)
@@ -24,13 +24,19 @@ def dft(t, x):
 
 def idft(t, X, f=None):
     N = np.shape(t)[0]
-    df = 1/(2*(t[-1]-t[0]))
-    k = 3
-    j = np.arange(-k*N, k*N)
-    if f is None: f = j*df
-    A = np.ones([N, 2*k*N], dtype = complex)
-    
+    M = np.shape(f)[0]
+    assert X.shape == f.shape
+    k = 4.0
+    if f is None: 
+        k = 3
+        df = 1/(2*(t[-1]-t[0]))
+        j = np.arange(-k*N, k*N)
+        f = j*df
+    print t.shape, X.shape, f.shape
+    A = np.ones([N, M], dtype = complex)
+    print A.shape
     A = A * (2.j * np.pi * f)
+    print A.shape
     A = np.exp(A.transpose() * t).transpose() * X.transpose()
     x = np.sum(A, axis=1) /(2*k)
     assert( t.shape == x.shape)
@@ -41,13 +47,13 @@ def window(t, x):
     df = 1/(2*(t[-1]-t[0]))
     k = 4
     j = np.arange(-k*N, k*N)
-    f = j*df
+    f = j*df/k
     A = np.ones([N, 2*k*N], dtype = complex)
     
     A = A * (-2.j * np.pi * f)
     A = np.exp(A.transpose() * t)
     X = np.sum(A, axis=1) / N
-    print X.shape, f.shape
+    assert( X.shape == f.shape)
     return X, f
 
 def clean(t, x, g = 0.2):
@@ -130,10 +136,11 @@ def clean(t, x, g = 0.2):
     return c, f
 
 if __name__ == '__main__':
-    #filename = '/work2/jwe/SOCS/M48/lightcurves.new/20140422A-0084-0002#1575.dat'
-    #t, x = np.loadtxt(filename, unpack=True)
-    t = np.linspace(0,63, 50)
-    x = 0.3*np.sin(2.*np.pi*t/0.3237)
+    filename = '/work2/jwe/SOCS/M48/lightcurves.new/20140422A-0084-0002#1575.dat'
+    t, x = np.loadtxt(filename, unpack=True)
+    #t = np.linspace(0,63, 100)
+    p = 3.2357
+    x = 0.3*np.sin(2.*np.pi*t/p)
     x -= np.mean(x)
     t -= t[0]
     
@@ -151,13 +158,52 @@ if __name__ == '__main__':
     plt.plot(fw, abs(ftw))
     
     
-    #t1 = np.linspace(0,t[-1]-t[0], 1000)
+    t1 = np.linspace(0,t[-1]-t[0], 400)
     #x1, _ = idft(t, ft, f=f)
     plt.subplot('414')
-    t1,x1 = idft(t, ft, f= f)
-    plt.plot(t1, x1, ',-')
+    t1,x1 = idft(t1, ft, f= f)
+    plt.plot(t1, x1, '-')
     plt.scatter(t, x, edgecolor='none', c='g', alpha=0.5)
     plt.savefig('clean.pdf')
+    plt.close()
+    
+    plt.figure(figsize=(6,9))
+    plt.subplot('411')
+    plt.plot(t, x, 'o-')
+    
+    plt.subplot('412')
+    plt.plot(f, abs(ft))
+    
+    plt.subplot('413')
+    ftw, fw = window(t, x)
+    plt.plot(fw, abs(ftw))
+
+    from scipy import signal
+    
+    plt.subplot('414')
+    div, dcf = signal.deconvolve(abs(ft), abs(ftw[f>=0]))    
+    cleaned = abs(dcf)/max(div)
+    div1, dcf1 = signal.deconvolve(abs(ft), abs(ftw[f<=0]))    
+    cleaned1 = abs(dcf1)/max(div1)
+    print max(div1),1./(2.*(t[-1]-t[0])),1./min(abs(t-np.roll(t,-1)))
+    plt.axvline(1./(2.*(t[-1]-t[0])), color='k', linestyle='--')
+    plt.axvline(1./min(t-np.roll(t,1)), color='k', linestyle='--')
+    
+    plt.axvline(p, color='r')
+    plt.axvline(1.+p, color='r')
+    plt.axvline(1./p, color='r')
+    plt.axvline(1.+1./p, color='r')
+    plt.plot(f[f>0],cleaned[f>0])
+    plt.plot(-f,cleaned1)
+    #plt.plot(1./f[f>0],abs(ft[f>0]),'r')
+    #plt.plot(1./f[f>0],cleaned[f>0])
+    #plt.xticks(np.arange(15))
+    #plt.minorticks_on()
+    #plt.xlim(0.1,15.0)
+    plt.savefig('clean1.pdf')
+    plt.close()
+    
+    
     exit()
     
     i = np.argmax(ft)
