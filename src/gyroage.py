@@ -66,7 +66,7 @@ def tau_gill(bv):
     return tau_int(bv)
 
 
-def tau(bv):
+def tau(bv, gilliland = False):
     """
     Table 1 from Barnes & Kim 2010 p.678
     """
@@ -83,8 +83,11 @@ def tau(bv):
              2.394,0.0,0.0,0.0,0.0,0.0])
     BV = (B-V)
     
-    if bv<=0.515:
+    if bv<=0.515 and gilliland:
         return tau_gill(bv)
+    if bv<=0.46 and not gilliland:
+        return 0.001
+    
     try:
         tau_int = interp1d(BV[::-1], tau_C[::-1], kind='linear')
     except ValueError:
@@ -105,7 +108,7 @@ def gyroage(bv, P, P0=1.1):
         t = (tau(bv)/k_C)*np.log(P/P0) + (0.5*k_I/tau(bv))*(P**2 - P0**2) 
         return t
     else:
-        return 0.0
+        return np.NaN
 
 def gyroperiod(bv, age, P0=1.1, version=2010):
     """
