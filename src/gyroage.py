@@ -168,10 +168,14 @@ if __name__ == '__main__':
     for k in zip(bv,P01,P11,P34):
         print '%.2f\t%.3f\t%.3f\t%.3f' % k
     
+    from breakup import breakup
+    bv_b, P_b = breakup()
+    
     plt.plot(bv, P11, 'g--')
     plt.plot(bv, P01, 'b--')
     
     plt.plot(bv, P34, 'r')
+    plt.plot(bv_b,P_b, 'k')
     plt.xlabel('B - V')
     plt.ylabel('P rot')
     plt.title('400 Myr')
