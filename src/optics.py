@@ -1,7 +1,10 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 '''
 Created on Jan 24, 2013
 
-@author: jwe
+@author: joerg@weingrill.net
+2013 - 2015 © Jörg Weingrill
 '''
 
 def radtoarcsec(radians):
@@ -19,25 +22,50 @@ def radtodeg(radians):
     from math import pi
     return radians*180./pi
 
+class Angle(object):
+    def __init__(self, value):
+        """
+        takes the value in radians
+        """
+        self.value = value
+        self.precision = 2
+    def __getitem__(self):
+        return self.value
+    
+    def __str__(self):
+        from math import pi
+        result = self.value*180./pi
+        if abs(result)>1.0:
+            return u"%.2f˚" % result
+        if abs(result*60.0)>1.0:
+            return u"%.2fʹ" % (result*60.0)
+        if abs(result*3600.0)>1.0:
+            return u"%.2fʺ" % (result*3600.0)
+        
+
 class Detector(object):
     """
     detector class
     """
-    def __init__(self, pixels, pixelsize, detname=None):
+    def __init__(self, pixels=[], pixelsize=None, name=None, telescope=None):
         """
         constructor of the detector class
         requires pixels with two entries: [width, height]
         pixelsize (assumed to be quadratic)
         """
-        detdb = {'ICX205AL':([1280,960],4.65e-6),
+        detectors = {'ICX205AL':([1280,960],4.65e-6),
                  'ICX204AL':([1024,768],4.65e-6),
                  'ICX098BL': ([640,480],5.6e-6),
                  'ICX618ALA':([640,480],5.6e-6),
+                 'AR0130CS':([1280,960],3.75e-6), #ASI120MM
+                 'STA1600LN': ([10560,10560], 9e-6)
                  }
-        if detname in detdb:
-            pixels, pixelsize = detdb[detname]
+        if name in detectors:
+            pixels, pixelsize = detectors[name]
         self.pixels = pixels
         self.pixelsize = pixelsize
+        self.name = name
+        self.telescope=telescope
     
     @property        
     def width(self):
@@ -52,49 +80,68 @@ class Detector(object):
     @property        
     def size(self):
         """returns the dimensions of the sensor"""
-        return [self.pixels[0]*self.pixelsize, self.pixels[1]*self.pixelsize]
+        return [self.width, self.height]
 
     @property        
-    def diameter(self):
+    def diagonal(self):
         """diagonal dimension of the sensor"""
         from math import sqrt
         return sqrt(self.pixels[0]**2+self.pixels[1]**2)*self.pixelsize 
 
-    def fieldofview(self, telescope):
+    @property        
+    def fieldofview(self):
         """sensors field of view in radians for the diagonal, x and y"""
         from math import atan
-        return (2.*atan(self.diameter/(2.*telescope.focallength)),
-                2.*atan(self.pixels[0]*self.pixelsize/(2.*telescope.focallength)),
-                2.*atan(self.pixels[1]*self.pixelsize/(2.*telescope.focallength)))
+        return (2.*atan(self.diagonal/(2.*self.telescope.focallength)),
+                2.*atan(self.pixels[0]*self.pixelsize/(2.*self.telescope.focallength)),
+                2.*atan(self.pixels[1]*self.pixelsize/(2.*self.telescope.focallength)))
 
-    def pixelfov(self, telescope):
+    @property        
+    def pixelfov(self):
         """returns the angular resolution in radians"""
         from math import atan
-        return 2.*atan(self.pixelsize/(2.*telescope.focallength))
+        return 2.*atan(self.pixelsize/(2.*self.telescope.focallength))
     
-    def criticalfocal(self, telescope, wavelength=550e-9):
+    def criticalfocal(self, wavelength=550e-9):
         """
         returns critical focal length (p. 22 in AIP)
         the focal length of the telescope must be smaller or equal to this.
         """
-        return telescope.diameter*self.pixelsize/(0.51*wavelength)
+        result = self.telescope.diameter*self.pixelsize/(0.51*wavelength) 
+        assert(self.telescope.focallength <= result)
+        return result
     
-    def focusdepth(self, telescope, wavelength=550e-9):
+    def focusdepth(self, wavelength=550e-9):
         """returns the depth of focus (AIP, p.58)"""
-        n = telescope.focalratio()
+        n = self.telescope.focalratio()
         return max([self.pixelsize*n, 4.0*n**2*wavelength])
+    
+    def __str__(self):
+        data = {'name': self.name,
+                'telname': self.telescope.name,
+                'diagonal': self.diagonal * 1000,
+                'fovx': radtodeg(self.fieldofview[1]),
+                'fovy': radtodeg(self.fieldofview[2]),
+                'pixelfov': radtoarcsec(self.pixelfov)
+                }
+        result = """name: %(name)s @ %(telname)s
+diagonal:  %(diagonal).3f mm
+FOV:       %(fovx).2f° × %(fovy).2f°
+pixel FOV: %(pixelfov).3fʺ
+        """ % data
+        return result
     
 class Telescope(object):
     """
     telescope class
     """
 
-    def __init__(self, diameter, focallength, name=None):
+    def __init__(self, diameter=None, focallength=None, name=None):
         """
         diameter and focal length in meters 
         an optional given name overrides the diameter and the focallength
         """
-        teldb = {'C11':          (0.2794, 2.794), 
+        teldb = {'Celestron11':  (0.2794, 2.794), 
                  'MTO1000':      (0.1, 1.0),
                  'Cassegrain50': (0.5, 7.5),
                  'Zeiss110':     (0.11, 0.11*7.5),
@@ -104,28 +151,63 @@ class Telescope(object):
             diameter, focallength = teldb[name]
         self.diameter = diameter
         self.focallength = focallength
+        self.name = name
     
     @property
     def focalratio(self):
-        """returns the focal ratio of the telescope"""
+        """
+        returns the focal ratio of the telescope
+        """
         return self.focallength/self.diameter
     
     def fwhm(self, wavelength=550e-9):
-        """returns the linear FWHM of a perfect stellar image"""
-        return 1.02*wavelength*self.focallength/self.diameter
+        """
+        returns the linear FWHM of a perfect stellar image
+        result in meter
+        """
+        return 1.02*wavelength*self.focalratio
+    
+    @property
+    def dawes(self):
+        """
+        Dawes' limit
+        this is an empirical result!
+        D originally in inches
+        result in arcsec
+        https://en.wikipedia.org/wiki/Angular_resolution
+        """
+        return 116/(self.diameter*1000)
+    
+    def rayleigh(self, wavelength=550e-9):
+        """
+        returns the Reyleigh criterion
+        result in meter
+        https://en.wikipedia.org/wiki/Angular_resolution
+        """
+        return 1.220*wavelength*self.focalratio
     
     def airy(self, wavelength=550e-9):
-        """returns the linear diameter of the Airy disk"""
-        return 2.44*wavelength*self.focalratio()
+        """
+        returns the linear diameter of the Airy disk
+        result in meter
+        https://en.wikipedia.org/wiki/Angular_resolution
+        """
+        return 2.44*wavelength*self.focalratio
     
     def fieldofview(self, detector):
-        """returns the angular field of view of a detector on the telescope"""
+        """
+        returns the angular field of view of a detector on the telescope
+        result in radians
+        """
         from math import atan
         return 2.*atan(detector.diameter/(2.*self.focallength))
         
     def resolution(self, wavelength=550e-9):
-        """returns the angular resolution in radians"""
-        return 1.02*wavelength/self.diameter
+        """
+        returns the angular resolution in radians
+        https://en.wikipedia.org/wiki/Angular_resolution
+        """
+        return 1.220*wavelength/self.diameter
     
     def magnification(self, minpupil=0.001, maxpupil=0.0075):
         """returns the minimum and the maximum magnifications"""
@@ -134,74 +216,114 @@ class Telescope(object):
     @property
     def limitingmagnitude(self):
         from math import log10
-        return 5*log10(self.diameter) + 2.7   
+        return 5*log10(self.diameter) + 2.7  
+    
+    def __str__(self): 
+        minmag,maxmag = self.magnification()
+        data = {'name': self.name,
+                'focalratio': self.focalratio,
+                'fwhm': self.fwhm()*1e6,
+                'airy': self.airy()*1e6,
+                'dawes': self.dawes,
+                'resolution': radtoarcsec(self.resolution()),
+                'minmag': minmag, 
+                'maxmag': maxmag,
+                'ideal': 1000.0*self.focallength/60.0, # 1arcsec seeing meets 1arcmin resolution of the eye
+                'eyemax': 1000.0*self.focallength/minmag,
+                'eyemin': 1000.0*self.focallength/maxmag}
+        result =  """%(name)s:
+focal ratio 1/f:    %(focalratio).1f
+stellar fwhm:       %(fwhm).1f μm
+Airy disc:          %(airy).1f μm
+resolution:         %(resolution).3f ʺ
+magnifications:     %(minmag)i × ... %(maxmag)i ×
+ideal eyepiece:     %(ideal)i mm
+range for eyepiece: %(eyemin).1f mm ... %(eyemax).1f mm""" % data
+        
+        return result
+
  
 class Eyepiece(object):
-    def __init__(self, focallength, fov = 55):
+    def __init__(self, focallength = None, 
+                 fov = 55, 
+                 name = None, 
+                 telescope = None,
+                 fieldstop = None):
         """
+        Vergrößerung = Teleskopbrennweite : Okularbrennweite
+        
+        Austrittspupille (AP)
+        AP = Teleskopöffnung : Vergrößerung
+        Oder
+        AP = Okularbrennweite : Öffnungszahl
+        (Öffnungszahl eines f/10 Teleskopes ist 10)
+        
+        Wahres Gesichtsfeld:
+        W = 2*Arctan(D/(2*F)
+        D = Durchmesser der Feldblende
+        F = Brennweite des Teleskops
+        Oder (Faustformel)
+        W = scheinbares Gesichtsfeld : Vergrößerung
+
         focal length in meters
         fov in degrees
         """
+        eyepieces = {'TS ED 16mm': (0.016, 60, None),
+                     'TS ED 15mm': (0.015, 60, None),
+                     'TS ED 25mm': (0.025, 50, None),
+                     'FMC 38mm':   (0.038, 70, None),
+                     'Plössl 9mm': (0.009, 50, 0.007),
+                     'ES WA 10mm': (0.010, 50, None)
+                     }
+        if name in eyepieces:
+            focallength, fov, fieldstop = eyepieces[name]
+        else:
+            print eyepieces.keys()
+            raise ValueError
         self.focallength = focallength
         self.fov = fov
+        self.telescope = telescope
+        self.fieldstop = fieldstop
+        self.name = name
     
-    def magnification(self, telescope):
+    @property
+    def magnification(self):
         """
-        returns the magnification in times
+        returns the magnification in times (×)
         """
-        return telescope.focallength/self.focallength
+        return self.telescope.focallength/self.focallength
     
-    def exitpupil(self, telescope):
+    @property
+    def exitpupil(self):
         """
         returns the exitpupil in meters
         """
-        return telescope.diameter/self.magnification(telescope)
+        return self.telescope.diameter/self.magnification
     
-    def truefov(self, telescope):
+    @property
+    def truefov(self):
         """
         returns the true field of view in degrees
         """
-        return self.fov/self.magnification(telescope)
+        from math import atan
+        if self.fieldstop is None:
+            return self.fov/self.magnification
+        else:
+            return radtodeg(2*atan(self.fieldstop/(2*self.telescope.focallength)))
+    
+    def __str__(self):
+        data = {'name': self.name,
+                'telname': self.telescope.name,
+                'exitpupil': self.exitpupil*1000.0,
+                'magnification': self.magnification,
+                'truefov': self.truefov*60.0}
+        result = """%(name)s @ %(telname)s:
+exitpupil:     %(exitpupil).1f mm
+magnification: %(magnification)d× 
+true FOV:      %(truefov)d '
+        """ % data
+        return result
+        
+    
 
-if __name__ == '__main__':
-    c11 = Telescope(0.0, 0.0, name='C11')
-    minmag, maxmag = c11.magnification(maxpupil = 0.0075)
-    print 'C11:'
-    print '%i ... %i' % (minmag,maxmag)
-    print 'ideal: %i mm' % (1000.0*c11.focallength/60.0)
-    print 1000.0*c11.focallength/minmag, 1000.0*c11.focallength/maxmag, 'mm'
-    
-    print '\nCassegrain 50:'
-    zeiss50 = Telescope(0.0, 0.0, name='Cassegrain50')
-    minmag,maxmag = zeiss50.magnification()
-    print '%i fach ... %i fach' % (minmag,maxmag)
-    print 'ideal: %i mm' % (1000.0*zeiss50.focallength/60.0)
-    print 'Okularbrennweite: %.1f mm ... %.1f mm' % (1000.0*zeiss50.focallength/minmag, 1000.0*zeiss50.focallength/maxmag)
-    tsed = Eyepiece(0.015)
-    print tsed.exitpupil(zeiss50)
-    print tsed.magnification(zeiss50)
-    print tsed.truefov(zeiss50)*60
-    
-    print '\nMeade 8":'
-    meade = Telescope(0.2, 1.2)
-    minmag, maxmag = meade.magnification(maxpupil = 0.007)
-    print '%i ... %i' % (minmag,maxmag)
-    print 'ideal: %i mm' % (1000.0*meade.focallength/60.0)
-    print 1000.0*meade.focallength/minmag, 1000.0*meade.focallength/maxmag, 'mm'
-    
-    print '\nBMK:'
-    bmk = Telescope(0.3, 0.75, name='BMK')
-    print '1/f: %f' % bmk.focalratio
-    ccd = Detector([10560,10560],9e-6)
-    print 'FOV: %f diag.' % radtodeg(bmk.fieldofview(ccd))
-    print 'FOV: %f x %f' % (radtodeg(ccd.fieldofview(bmk)[1]),radtodeg(ccd.fieldofview(bmk)[2]))
-    print 'BMK resolution: %f"' % radtoarcsec(bmk.resolution())
-    print 'BMK resolution: %f"' % radtoarcsec(ccd.pixelfov(bmk))
-
-    print '\nETX:'
-    etx = Telescope(0.07, 0.35, name='ETX')
-    minmag, maxmag = etx.magnification(maxpupil = 0.007)
-    print '%i ... %i' % (minmag,maxmag)
-    print 'ideal: %i mm' % (1000.0*etx.focallength/60.0)
-    print 'Okularbrennweite: %.1f mm ... %.1f mm' % (1000.0*etx.focallength/minmag, 1000.0*etx.focallength/maxmag)
     
