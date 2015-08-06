@@ -174,19 +174,20 @@ class HTMfunc(object):
     
     def radecToVector(self, ra, dec):
         """convert ra dec to a vector"""
-        Epsilon = 1.0E-15
-        
+        Epsilon = 1.0E-7
+        quadrant = (ra/90.0) # how close is it to an integer?
+        ra *= math.pi / 180.0
+        dec *= math.pi / 180.0
         vec = np.zeros(3)
-        cd = math.cos( dec * math.pi / 180.0)
-
+        
         if abs(90.0 - dec) < Epsilon:
             return np.array([1.0, 0.0,1.0])
 
         if abs(-90.0 - dec) < Epsilon:
             return np.array([1.0, 0.0, -1.0])
         
-        vec[2] = math.sin(dec* math.pi / 180.0)
-        quadrant = ra / 90.0 # how close is it to an integer?
+        vec[2] = math.sin(dec)
+        
         """
         if quadrant is (almost) an integer, force x, y to particular
         values of quad:
@@ -198,9 +199,13 @@ class HTMfunc(object):
         q>3, make q = q mod 4, and reduce to above
         q mod 4 should be 0.
         """
+        vec[0] = math.cos(dec) * math.cos(ra)
+        vec[1] = math.cos(dec) * math.sin(ra)
+        return vec
         qint = round(quadrant)
         
         if abs(qint - quadrant) < Epsilon:
+            #print 'q! %d %f' % (qint, quadrant),
             iint = int(qint)
             iint %= 4
             if (iint < 0): iint += 4
@@ -215,8 +220,8 @@ class HTMfunc(object):
                 vec[0:2] = [0.0, -1.0]
             return vec
         
-        vec[0] = math.cos(ra * math.pi / 180.0) * cd
-        vec[1] = math.sin(ra * math.pi / 180.0) * cd
+        vec[0] = math.cos(dec) * math.cos(ra)
+        vec[1] = math.cos(dec) * math.sin(ra)
         return vec
     
     def lookupId(self, ra, dec):
@@ -364,7 +369,7 @@ class HTMfunc(object):
 
         name = ''
         #fill characters starting with the last one
-        for i in range(size):
+        for i in range(size-1):
             c =  '%d' % ((htmid >> i*2) & 3)
             name = c + name
 
@@ -486,54 +491,61 @@ class HTMfunc(object):
         else:
             raise(TypeError)
     
-    def Vectortoradec(self, x):
+    def Vectortoradec(self, xvec):
         """
         convert the cartesian coodinates x 
         to spherical coordinates lamb, beta and r
+        result in degrees
+        taken from Montenbruck p.2
         """
+        x, y, z = xvec
+        r = np.sqrt(x**2 + y**2 + z**2)
+        rho = np.sqrt(x**2 + y**2)
         
-        r = np.sqrt(np.sum(x**2))
-        rho = np.sqrt(np.sum(x[0:2]**2))
-        
-        if rho == 0:
-            if x[2] > 0: beta = 90.0
-            if x[2] ==0 : beta = 0.0
-            if x[2] < 0: beta = -90
+        if rho == 0.0:
+            if z > 0.0:  beta =  90.0
+            if z == 0.0: beta =   0.0
+            if z < 0.0:  beta = -90.0
         else:
-            beta = math.atan2(x[2], rho) * 180.0 / math.pi
+            beta = math.atan2(z, rho) * 180.0 / math.pi
         
-        phi = 2.0 * math.atan2(x[1], abs(x[0])+rho) * 180.0 / math.pi
+        phi = 2.0 * math.atan2(y, abs(x)+rho) * 180.0 / math.pi
         
-        if x[0] == 0.0 and x[1] == 0.0:
-            lamb = 0.0
-        if x[0] >= 0.0 and x[1] >= 0.0:
-            lamb = phi
-        if x[0] >= 0.0 and x[1] < 0.0:
-            lamb = 360 + phi
-        if x[0] < 0.0:
-            lamb = 180 - phi
+        if x == 0.0 and y == 0.0: lamb = 0.0
+        if x >= 0.0 and y >= 0.0: lamb = phi
+        if x >= 0.0 and y < 0.0:  lamb = 360.0 + phi
+        if x < 0.0:               lamb = 180.0 - phi
         
         return lamb, beta, r
 
 if __name__ == '__main__':
-    h = HTMfunc(depth = 8) 
+    h = HTMfunc(depth = 12) 
     
-    ra0 = 0.0; dec0 = 0.0
-    htmid = h.lookupid(ra0, dec0)
-    print h.baseindex
-    print h.baseID
-    print h.name
+    ra0 = 45.0; dec0 = 45.0
+    htmid = h.lookupId(ra0, dec0)
+    print 'baseindex:', h.baseindex
+    print 'baseID:', h.baseID
+    print 'basename:', h.name
     print 'id = %d' % htmid
     x = h.idToPoint(htmid)
-    print 'x = %.4f, %.4f, %.4f' % (x[0], x[1], x[2])
-
-    x1 = h.radecToVector(ra0, dec0)
-    print 'x1 = %.4f, %.4f, %.4f' % (x1[0], x1[1], x1[2])
-
-    
+    #x = h._idToPoint(h.name)
     ra, dec, r = h.Vectortoradec(x) 
-    print 'ra, dec = %.4f, %.4f, %.6f' % (ra, dec, r)
+    #x = [0.707106781187,-0.707106781187, 0.0]
+    print '(%5.1f, %5.1f) | (%6.3f, %6.3f, %6.3f) | (%5.1f, %5.1f)' % \
+        (ra0, dec0, x[0], x[1], x[2], ra,dec)
+    htmid = 12683
+    print h.idToName(htmid)
+    #N012023
     
+    for dec0 in [-90.0,-45.0,0.0,45.0,90.0]:
+        for ra0 in range(0, 360, 1):
+            x1 = h.radecToVector(float(ra0), dec0)
+            ra, dec, r = h.Vectortoradec(x1) 
+            if abs(ra-ra0)>1e-7 or abs(dec-dec0)>1e-7:
+                print 'ra0, dec0 = %5.1f, %5.1f' % (ra0, dec0),
+                print 'x1 = %6.3f, %6.3f, %6.3f' % (x1[0], x1[1], x1[2]),
+                print 'ra, dec = %5.1f, %5.1f' % (ra, dec)
+            
     
    
     #import esutil
