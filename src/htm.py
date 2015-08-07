@@ -30,7 +30,6 @@ Revision 1.2  2003/02/07 19:36:03  womullan
 Revision 1.1  2003/02/05 23:00:07  womullan
 Added new timimig routines and HTM clas to do cc stuff from the c++ package
 '''
-import math
 import numpy as np
 
 class HTMfunc(object):
@@ -103,8 +102,8 @@ class HTMfunc(object):
         the provided w vector.
         """
         w = v1 + v2
-        tmp = np.sqrt(np.sum(w**2))
-        w /= tmp
+        w /= np.sqrt(np.sum(w**2))
+        #w /= np.linalg.norm(w)
         return w
 
     def _lookup(self, x, y, z):
@@ -127,7 +126,7 @@ class HTMfunc(object):
         Start searching for the children
         """
         depth = self.depth
-        while(depth > 0):
+        while depth:
             depth -= 1
             w2 = self.m4_midpoint(v0, v1)
             w0 = self.m4_midpoint(v1, v2)
@@ -174,10 +173,10 @@ class HTMfunc(object):
     
     def radecToVector(self, ra, dec):
         """convert ra dec to a vector"""
-        Epsilon = 1.0E-7
+        Epsilon = 1.0E-13
         quadrant = (ra/90.0) # how close is it to an integer?
-        ra *= math.pi / 180.0
-        dec *= math.pi / 180.0
+        ra *= np.pi / 180.0
+        dec *= np.pi / 180.0
         vec = np.zeros(3)
         
         if abs(90.0 - dec) < Epsilon:
@@ -186,7 +185,7 @@ class HTMfunc(object):
         if abs(-90.0 - dec) < Epsilon:
             return np.array([1.0, 0.0, -1.0])
         
-        vec[2] = math.sin(dec)
+        vec[2] = np.sin(dec)
         
         """
         if quadrant is (almost) an integer, force x, y to particular
@@ -199,8 +198,8 @@ class HTMfunc(object):
         q>3, make q = q mod 4, and reduce to above
         q mod 4 should be 0.
         """
-        vec[0] = math.cos(dec) * math.cos(ra)
-        vec[1] = math.cos(dec) * math.sin(ra)
+        vec[0] = np.cos(dec) * np.cos(ra)
+        vec[1] = np.cos(dec) * np.sin(ra)
         return vec
         qint = round(quadrant)
         
@@ -220,19 +219,15 @@ class HTMfunc(object):
                 vec[0:2] = [0.0, -1.0]
             return vec
         
-        vec[0] = math.cos(dec) * math.cos(ra)
-        vec[1] = math.cos(dec) * math.sin(ra)
+        vec[0] = np.cos(dec) * np.cos(ra)
+        vec[1] = np.cos(dec) * np.sin(ra)
         return vec
     
     def lookupId(self, ra, dec):
         """
         same as lookup but converts the name to an id
         """
-        ra *= math.pi/180.0
-        dec *= math.pi/180.0
-        x = math.cos(dec) * math.cos(ra)
-        y = math.cos(dec) * math.sin(ra)
-        z = math.sin(dec)
+        x, y, z = self.radecToVector(ra, dec)
         return self._lookupId(x, y, z) 
     
     def isinside(self, p, v1, v2, v3): # p need not be normalized!!!
@@ -240,7 +235,7 @@ class HTMfunc(object):
         for a given vector p is it contained in the triangle whose corners are
         given by the vectors v1, v2, v3.
         """
-        gEpsilon = 1.0E-15
+        gEpsilon = 1.0E-13
         
         crossp = np.cross(v1, v2)
         if (np.dot(p, crossp) < -gEpsilon):
@@ -291,22 +286,12 @@ class HTMfunc(object):
             raise(ValueError)
         if siz > HTMNAMEMAX:
             raise(ValueError)
-        
-        out = 0
-        for i in range(siz-1, 0, -1):
-            # set bits starting from the end
-            if self.name[i] > '3' or self.name[i] < '0': 
-                # invalid name
-                raise(ValueError)
 
-            out +=  int(self.name[i]) << 2*(siz - i -1)
-
-        i = 2 # set first pair of bits, first bit always set
-        if self.name[0] == 'N': 
-            i += 1 # for north set second bit too
-        last = i << (2*siz - 2)
-        out += last
-        return out
+        if self.name[0] == 'N':
+            iname = '3'+self.name[1:]
+        elif self.name[0] == 'S':
+            iname = '2'+self.name[1:]
+        return int(iname, 4)
     
     def idLevel(self, htmid):
         """
@@ -350,36 +335,25 @@ class HTMfunc(object):
 
         The order is always ascending starting from S0000.. to N3333...
         """
-        IDSIZE = 64
-        IDHIGHBIT = 1L << 63
-        IDHIGHBIT2 = 1L << 63
-    
+        # source http://stackoverflow.com/questions/2267362
+        import string
+        digs = string.digits + string.letters
 
-        # determine index of first set bit
-        for i in range(0,IDSIZE,2):
-            x8 = ((htmid << i) & IDHIGHBIT)
-            x4 = ((htmid << i) & IDHIGHBIT2)
-            if ( x8 != 0 ): 
-                break
-            if (x4 != 0): # invalid id
-                raise(ValueError)
+        if htmid == 0: raise(ValueError)
+        digits = []
+        while htmid:
+            digits.append(digs[htmid % 4])
+            htmid /= 4
+        digits.reverse()
+        name = ''.join(digits)
         
-        if (htmid == 0): raise(ValueError)
-        size=(IDSIZE-i) >> 1
-
-        name = ''
-        #fill characters starting with the last one
-        for i in range(size-1):
-            c =  '%d' % ((htmid >> i*2) & 3)
-            name = c + name
-
-
-        # put in first character
-        if ((htmid >> (size*2-2)) & 1) > 0:
-            name = 'N' + name
-        else:
-            name = 'S' + name
-
+        if name[0] == '3': 
+            name = 'N' + name[1:]
+        elif name[0] == '2': 
+            name = 'S' + name[1:]
+        else: 
+            raise(ValueError)
+        self.name = name
         return name
     
     def nameToTriangle(self, name):
@@ -442,7 +416,7 @@ class HTMfunc(object):
             offset += 1
         return [v0,v1,v2]
 
-    def _idToPoint(self, name):
+    def NameToPoint(self, name):
         """
         for a given ID get back the approximate center of the triangle.
         This may be used as an inverse of lookup however bear in mind many points
@@ -464,14 +438,14 @@ class HTMfunc(object):
         gets the name from the id and calls idToPoint with it.
         """
         name = self.idToName(htmid)
-        return self._idToPoint(name)
+        return self.NameToPoint(name)
 
     def _distance(self, v1, v2):
         """
         return the angular distance between two vectors
         ACOS (V1 . V2)
         """
-        return math.acos(np.dot(v1,v2))
+        return np.arccos(np.dot(v1,v2))*180.0/np.pi
 
     def distance(self, htmId1, htmId2):
         """
@@ -507,9 +481,9 @@ class HTMfunc(object):
             if z == 0.0: beta =   0.0
             if z < 0.0:  beta = -90.0
         else:
-            beta = math.atan2(z, rho) * 180.0 / math.pi
+            beta = np.arctan2(z, rho) * 180.0 / np.pi
         
-        phi = 2.0 * math.atan2(y, abs(x)+rho) * 180.0 / math.pi
+        phi = 2.0 * np.arctan2(y, abs(x)+rho) * 180.0 / np.pi
         
         if x == 0.0 and y == 0.0: lamb = 0.0
         if x >= 0.0 and y >= 0.0: lamb = phi
@@ -518,16 +492,113 @@ class HTMfunc(object):
         
         return lamb, beta, r
 
-if __name__ == '__main__':
-    h = HTMfunc(depth = 12) 
+def testnametoid():
+    h = HTMfunc(depth = 5)
+    htmid = 12683
+    print h.idToName(htmid)
+    name = 'N012023'
     
+    def nametoid(name):
+        if name[0] == 'N':
+            iname = '3'+name[1:]
+        elif name[0] == 'S':
+            iname = '2'+name[1:]
+        return int(iname, 4)
+    
+    print 'nametoid (%s) = %d' % (name, nametoid(name))
+    htmid1 = h.nameToId()
+    print htmid1
+    #htmid1 = h.nameToId(name)
+    #print htmid,name,htmid1
+
+def testvectorgrid():
+    h = HTMfunc(depth = 12) 
+    decs = np.arange(0.0, 90.0, 0.1)
+    ras = np.arange(0.0, 90.0, 0.1)
+    errarr = np.ones((len(decs),len(ras)))
+    for y in range(len(decs)):
+        dec0 = decs[y]
+        for x in range(len(ras)):
+            ra0 = ras[x]
+            x1 = h.radecToVector(ra0, dec0)
+            ra, dec, _ = h.Vectortoradec(x1) 
+            error = np.sqrt(abs(ra-ra0)**2 + abs(dec-dec0)**2)
+            errarr[y,x]= error
+    print np.max(errarr)
+    import matplotlib.pyplot as plt
+    plt.imshow(errarr, interpolation='nearest', 
+               extent=[min(ras),max(ras),min(decs),max(decs)],
+               origin='lower')
+    plt.savefig('vectorgrid.png')
+    plt.show()
+    plt.close()
+            
+
+def testgrid():
+    
+    h2 = HTMfunc(depth = 5) 
+    print h2.distance(56909, 56908)
+    decs = np.arange(0.0, 90.0, 1)
+    ras = np.arange(0.0, 90.0, 1)
+    errarr = np.ones((len(decs),len(ras)))
+    for y in range(len(decs)):
+        dec0 = decs[y]
+        for x in range(len(ras)):
+            ra0 = ras[x]
+            htmid2 = h2.lookupId(ra0, dec0)
+            name = h2.name
+            x2 = h2.NameToPoint(name)
+            #x2 = h2.idToPoint(htmid2)
+            ra, dec, _ = h2.Vectortoradec(x2) 
+    
+            #x1 = h.radecToVector(float(ra0), dec0)
+            #ra, dec, r = h.Vectortoradec(x1) 
+            error = np.sqrt(abs(ra-ra0)**2 + abs(dec-dec0)**2)
+            errarr[y,x]= np.log10(error)
+    print 10**np.max(errarr)
+    import matplotlib.pyplot as plt
+    plt.imshow(errarr, interpolation='nearest', 
+               extent=[min(ras),max(ras),min(decs),max(decs)],
+               origin='lower')
+    plt.show()
+    plt.close()
+
+def testcoord(ra0, dec0):
+    h = HTMfunc(depth = 18) 
+    from astronomy import Coordinates
+    c0 = Coordinates(ra0, dec0)
+    htmid = h.lookupId(ra0, dec0)
+    #print 'baseindex:', h.baseindex
+    #print 'baseID:', h.baseID
+    #print 'basename:', h.name
+    #print 'id = %d' % htmid
+    
+    x = h.idToPoint(htmid)
+    
+    ra, dec, _ = h.Vectortoradec(x)
+    c1 = Coordinates(ra, dec) 
+    print '%s | %s | %s' % \
+        (c0, 'HTM'+hex(htmid).upper()[2:], c1)
+
+if __name__ == '__main__':
+    #testgrid() 123.418462 | -5.773371
+
+    testcoord(123.418462, -5.773371)
+    testcoord(123.418461, -5.77366)
+    #testvectorgrid()
+    exit()
+    
+    h = HTMfunc(depth = 12) 
+    #HTM N2E812E
     ra0 = 45.0; dec0 = 45.0
     htmid = h.lookupId(ra0, dec0)
     print 'baseindex:', h.baseindex
     print 'baseID:', h.baseID
     print 'basename:', h.name
     print 'id = %d' % htmid
+    
     x = h.idToPoint(htmid)
+    
     #x = h._idToPoint(h.name)
     ra, dec, r = h.Vectortoradec(x) 
     #x = [0.707106781187,-0.707106781187, 0.0]
@@ -535,18 +606,25 @@ if __name__ == '__main__':
         (ra0, dec0, x[0], x[1], x[2], ra,dec)
     htmid = 12683
     print h.idToName(htmid)
-    #N012023
+    print int('23331333330333',4)
+    #N012023 Nqq
+    '''
+    HTM N23CC96 | NGC 6633 BVI NE
+    HTM N23CE4E | NGC 6633 rot SE
     
-    for dec0 in [-90.0,-45.0,0.0,45.0,90.0]:
-        for ra0 in range(0, 360, 1):
-            x1 = h.radecToVector(float(ra0), dec0)
-            ra, dec, r = h.Vectortoradec(x1) 
-            if abs(ra-ra0)>1e-7 or abs(dec-dec0)>1e-7:
-                print 'ra0, dec0 = %5.1f, %5.1f' % (ra0, dec0),
-                print 'x1 = %6.3f, %6.3f, %6.3f' % (x1[0], x1[1], x1[2]),
-                print 'ra, dec = %5.1f, %5.1f' % (ra, dec)
-            
+    '''
+    h1 = HTMfunc(depth = 12) 
+    print 'NGC 6709 HTM2E812E'
+    ra0, dec0 = (282.825, 10.3183333333)
+    htmid0 = h1.lookupId(ra0, dec0)
+    print hex(htmid0)
+    htmid = int('0x2E812E',16)
+    x = h1.idToPoint(htmid)
     
+    ra1, dec1, r = h1.Vectortoradec(x) 
+    print '(%5.1f, %5.1f) %d (%5.1f, %5.1f)' % (ra0, dec0, htmid, ra1, dec1)
+    
+    #testgrid()
    
     #import esutil
     #h1 = esutil.htm.HTM(8)
