@@ -94,7 +94,7 @@ if __name__ == '__main__':
     f = interp1d(x,y)
     x1 = [3.0,4.0]
     y1 = f(x1)
-    x2 = np.linspace(-1.0,8.0, 20)
+    x2 = np.linspace(-1.0,8.0, 100)
     y2 =  tinterpol(x, y, x2)
     import matplotlib
     matplotlib.use('WXAgg')
