@@ -133,21 +133,47 @@ def clean(t, x, g = 0.2):
         
     return c, f
 
-def clean1():
-    pass
+def clean1(t, x):
+    x -= np.mean(x)
+    t -= t[0]
+    ft, f = dft(t, x)
+    ftw, fw = window(t, x)
+    aft = abs(ft)
+    cleaned = np.zeros(len(ft))
+    n2 = len(ft) / 2
+
+    for k in range(100):
+        i = np.argmax(aft[n2:])
+        ipos = i + n2
+        ineg = n2 - i
+        gain = aft[ipos]
+        sigma = np.std(aft[n2:])
+        if gain < sigma: break
+        print k, gain, sigma
+        
+        cleaned[ipos] += gain
+        cleaned[ineg] += gain
+        pftw = np.roll(abs(ftw), i)[n2:len(ft)+n2]
+        pftw += np.roll(abs(ftw), -i)[n2:len(ft)+n2]
+#        plt.plot(f,pftw)
+        aft = abs(aft - gain*pftw)
+    
+    from scipy import signal
+    gauss = signal.gaussian(len(cleaned), 1.0,)
+    cleaned = signal.convolve(cleaned, gauss, mode='same')
+    return f, cleaned, aft
+
 
 if __name__ == '__main__':
-    filename = '/work2/jwe/SOCS/M48/lightcurves.new/20140403A-0079-0002#1032.dat'
+    filename = '/work2/jwe/SOCS/M48/lightcurves.new/20140403A-0079-0002#1499.dat'
     t, x = np.loadtxt(filename, unpack=True)
 
     #t = np.linspace(0,63, 100)
     p = 7.2357
-    x = 0.3*np.sin(2.*np.pi*t/p)+0.2
-    x += np.random.normal(scale=0.5, size=x.shape)
+    #x = 0.3*np.sin(2.*np.pi*t/p)+0.2
+    #x += np.random.normal(scale=0.3, size=x.shape)
     #from random import shuffle
     #shuffle(x)
-    x -= np.mean(x)
-    t -= t[0]
     
     plt.figure(figsize=(6,9))
 
@@ -164,94 +190,19 @@ if __name__ == '__main__':
     print 'ftw', len(ftw)
     
     aft = abs(ft)
-    cleaned = np.zeros(len(ft))
-    n2 = len(ft) / 2
-    # n2 = n / 2
-    print 'ft ',len(ft)
 
-    for k in range(10):
-        i = np.argmax(aft[n2:])
-        ipos = i + n2
-        ineg = n2 - i
-        gain = aft[ipos]
-        sigma = np.std(aft[n2:])
-        if gain < sigma: break
-        print k, gain, sigma
-        
-        cleaned[ipos] += gain
-        cleaned[ineg] += gain
-        pftw = np.roll(abs(ftw), i)[n2:len(ft)+n2]
-        pftw += np.roll(abs(ftw), -i)[n2:len(ft)+n2]
-#        plt.plot(f,pftw)
-        aft = abs(aft - gain*pftw)
+    f, cleaned, res = clean1(t, x)
     
     plt.subplot('514')
-    plt.plot(f, aft)
+    plt.plot(f, res)
     
     plt.subplot('515')
-    #plt.axvline(p, color='r')
+
+    n2 = len(f) /2
+    plt.axvline(1, color='r')
     plt.xlim(0.0,30.0)
     plt.plot(1./f[n2+1:], cleaned[n2+1:])
     plt.savefig('clean.pdf')
     plt.close()
     
     exit()
-    
-    
-    plt.figure(figsize=(6,9))
-    plt.subplot('411')
-    plt.plot(t, x, 'o-')
-    
-    plt.subplot('412')
-    plt.plot(f, abs(ft))
-    
-    plt.subplot('413')
-    ftw, fw = window(t, x)
-    plt.plot(fw, abs(ftw))
-
-    from scipy import signal
-    
-    plt.subplot('414')
-    
-    div, dcf = signal.deconvolve(abs(ft), abs(ftw[f>=0]))    
-    cleaned = abs(dcf)/max(div)
-    div1, dcf1 = signal.deconvolve(abs(ft), abs(ftw[f<=0]))    
-    cleaned1 = abs(dcf1)/max(div1)
-    print max(div1),1./(2.*(t[-1]-t[0])),1./min(abs(t-np.roll(t,-1)))
-    plt.axvline(1./(2.*(t[-1]-t[0])), color='k', linestyle='--')
-    plt.axvline(1./min(t-np.roll(t,1)), color='k', linestyle='--')
-    
-    plt.axvline(p, color='r')
-    plt.axvline(1.+p, color='r')
-    plt.axvline(1./p, color='r')
-    plt.axvline(1.+1./p, color='r')
-    plt.plot(f[f>0],cleaned[f>0])
-    plt.plot(-f,cleaned1)
-    #plt.plot(1./f[f>0],abs(ft[f>0]),'r')
-    #plt.plot(1./f[f>0],cleaned[f>0])
-    #plt.xticks(np.arange(15))
-    #plt.minorticks_on()
-    #plt.xlim(0.1,15.0)
-    plt.savefig('clean1.pdf')
-    plt.close()
-    
-    
-    exit()
-    
-    i = np.argmax(ft)
-    print i
-    iw = np.argmax(ftw)
-    print iw
-    k = ft[i]
-    clean = ft - k*np.roll(ftw,i-iw)
-    #clean = abs(x1)/abs(x0)
-    plt.plot(f,clean ,'r')
-    #plt.xlim(0.0,15.0)
-    plt.savefig('clean.pdf')
-    plt.close()
-    exit(0)
-    c, f = clean(t-t[0], x)
-    plt.plot(f, abs(c))
-    #plt.plot(f,A)
-    plt.show()
-    #print c
