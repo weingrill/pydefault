@@ -5,6 +5,7 @@ Created on Jul 13, 2015
 
 @author: Joerg Weingrill <jweingrill@aip.de>
 '''
+
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -32,11 +33,8 @@ def idft(t, X, f=None):
         df = 1/(2*(t[-1]-t[0]))
         j = np.arange(-k*N, k*N)
         f = j*df
-    print t.shape, X.shape, f.shape
     A = np.ones([N, M], dtype = complex)
-    print A.shape
     A = A * (2.j * np.pi * f)
-    print A.shape
     A = np.exp(A.transpose() * t).transpose() * X.transpose()
     x = np.sum(A, axis=1) /(2*k)
     assert( t.shape == x.shape)
@@ -44,8 +42,8 @@ def idft(t, X, f=None):
 
 def window(t, x):
     N = np.shape(t)[0]
-    df = 1/(2*(t[-1]-t[0]))
-    k = 4
+    df = 1/(1*(t[-1]-t[0]))
+    k = 8
     j = np.arange(-k*N, k*N)
     f = j*df/k
     A = np.ones([N, 2*k*N], dtype = complex)
@@ -135,37 +133,70 @@ def clean(t, x, g = 0.2):
         
     return c, f
 
+def clean1():
+    pass
+
 if __name__ == '__main__':
-    filename = '/work2/jwe/SOCS/M48/lightcurves.new/20140422A-0084-0002#1575.dat'
+    filename = '/work2/jwe/SOCS/M48/lightcurves.new/20140403A-0079-0002#1032.dat'
     t, x = np.loadtxt(filename, unpack=True)
+
     #t = np.linspace(0,63, 100)
-    p = 3.2357
-    x = 0.3*np.sin(2.*np.pi*t/p)
+    p = 7.2357
+    x = 0.3*np.sin(2.*np.pi*t/p)+0.2
+    x += np.random.normal(scale=0.5, size=x.shape)
+    #from random import shuffle
+    #shuffle(x)
     x -= np.mean(x)
     t -= t[0]
     
     plt.figure(figsize=(6,9))
 
-    plt.subplot('411')
+    plt.subplot('511')
     plt.plot(t, x, 'o-')
     
-    plt.subplot('412')
+    plt.subplot('512')
     ft, f = dft(t, x)
     plt.plot(f, abs(ft))
     
-    plt.subplot('413')
+    plt.subplot('513')
     ftw, fw = window(t, x)
     plt.plot(fw, abs(ftw))
+    print 'ftw', len(ftw)
     
+    aft = abs(ft)
+    cleaned = np.zeros(len(ft))
+    n2 = len(ft) / 2
+    # n2 = n / 2
+    print 'ft ',len(ft)
+
+    for k in range(10):
+        i = np.argmax(aft[n2:])
+        ipos = i + n2
+        ineg = n2 - i
+        gain = aft[ipos]
+        sigma = np.std(aft[n2:])
+        if gain < sigma: break
+        print k, gain, sigma
+        
+        cleaned[ipos] += gain
+        cleaned[ineg] += gain
+        pftw = np.roll(abs(ftw), i)[n2:len(ft)+n2]
+        pftw += np.roll(abs(ftw), -i)[n2:len(ft)+n2]
+#        plt.plot(f,pftw)
+        aft = abs(aft - gain*pftw)
     
-    t1 = np.linspace(0,t[-1]-t[0], 400)
-    #x1, _ = idft(t, ft, f=f)
-    plt.subplot('414')
-    t1,x1 = idft(t1, ft, f= f)
-    plt.plot(t1, x1, '-')
-    plt.scatter(t, x, edgecolor='none', c='g', alpha=0.5)
+    plt.subplot('514')
+    plt.plot(f, aft)
+    
+    plt.subplot('515')
+    #plt.axvline(p, color='r')
+    plt.xlim(0.0,30.0)
+    plt.plot(1./f[n2+1:], cleaned[n2+1:])
     plt.savefig('clean.pdf')
     plt.close()
+    
+    exit()
+    
     
     plt.figure(figsize=(6,9))
     plt.subplot('411')
@@ -181,6 +212,7 @@ if __name__ == '__main__':
     from scipy import signal
     
     plt.subplot('414')
+    
     div, dcf = signal.deconvolve(abs(ft), abs(ftw[f>=0]))    
     cleaned = abs(dcf)/max(div)
     div1, dcf1 = signal.deconvolve(abs(ft), abs(ftw[f<=0]))    
