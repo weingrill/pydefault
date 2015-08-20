@@ -136,7 +136,7 @@ def clean_crane(t, x, g = 0.2):
         
     return c, f
 
-def clean(t, x, gain = 0.5, threshold = 1e-9):
+def clean(t, x, gain = 0.5, threshold = 1e-4):
     x -= np.mean(x)
     t -= t[0]
     ft, f = dft(t, x)
@@ -144,7 +144,7 @@ def clean(t, x, gain = 0.5, threshold = 1e-9):
     aft = abs(ft)
     cleaned = np.zeros(len(ft))
     n2 = len(ft) / 2
-
+    sigma0 = np.std(aft[n2:])
     for k in range(1000):
         i = np.argmax(aft[n2:])
         ipos = i + n2
@@ -152,31 +152,37 @@ def clean(t, x, gain = 0.5, threshold = 1e-9):
         amp = gain*aft[ipos]
         sigma = np.std(aft[n2:])
         if amp < sigma or amp < threshold: break
-        print k, i, amp, sigma
+        #print k, i, amp, sigma
         
-        cleaned[ipos] += amp
-        cleaned[ineg] += amp
+        cleaned[ipos] += amp/gain
+        cleaned[ineg] += amp/gain
         pftw = np.roll(abs(ftw), i)[n2:len(ft)+n2]
         pftw += np.roll(abs(ftw), -i)[n2:len(ft)+n2]
 #        plt.plot(f,pftw)
         aft = abs(aft - amp*pftw)
     
     from scipy import signal
-    gauss = signal.gaussian(len(cleaned), 1.5)
+    gauss = signal.gaussian(len(cleaned), 2)
     cleaned = signal.convolve(cleaned, gauss, mode='same')
-    return f, cleaned, aft
+    return f, cleaned+aft, aft, sigma0
 
 if __name__ == '__main__':
     from glob import glob
     filenames = glob('/work2/jwe/SOCS/M48/lightcurves.new/*.dat')
     filename = filenames[47]
-    t, x = np.loadtxt(filename, unpack=True)
-
+    filename = '/work2/jwe/SOCS/M48/lightcurves/20140303A-0074-0013#1952.dat'
+    t, x, corr = np.loadtxt(filename, unpack=True)
+    t -= t[0]
+    #x -= corr
+    x -= np.mean(x)
+    par = np.polyfit(t, x, 1)
+    
+    x -= par[0]*t + par[1]
     #t = np.linspace(0,63, 100)
-    p0 = 17.2357
-    x = 0.3*np.sin(2.*np.pi*t/p0)+0.2
-    x += np.random.normal(scale=0.3, size=x.shape)
-    #from random import shuffle
+    p0 = 3.24
+    #x = 0.3*np.sin(2.*np.pi*t/p0)+0.2
+    #x += np.random.normal(scale=0.3, size=x.shape)
+    from random import shuffle
     #shuffle(x)
     
     plt.figure(figsize=(6,9))
@@ -186,40 +192,58 @@ if __name__ == '__main__':
     
     plt.subplot('512')
     ft, f = dft(t, x)
-    plt.plot(f, abs(ft), 'k')
-    sigma = np.std(ft[f>=0])
+    plt.plot(1./f[f>0.0], abs(ft)[f>0.0], 'k')
+    plt.axvline(p0, color='b')
+    plt.xlim(0.0,max(t)/2)
+    #sigma = np.std(ft[f>=0])
     
     plt.subplot('513')
     ftw, fw = window(t, x)
-    plt.plot(fw, abs(ftw), 'k')
-    print 'ftw', len(ftw)
+    plt.plot(1./fw[fw>0.0], abs(ftw)[fw>0.0], 'k')
+    plt.xlim(0.0,max(t)/2)
+    
+    #import scipy.signal as signal
+    #nout = 1000
+    #flomb = np.linspace(1./60., 1./0.05, nout)
+    #pgram = signal.lombscargle(t, x, flomb)
+    #plt.plot(2.*np.pi/flomb, np.sqrt(4*(pgram/nout)),'k')
+    
+    #from psd import ppsd
+    #pp, fp = ppsd(t, x, lower=1./60., upper=1./0.05, num=len(x)*8) 
+    #pp = np.sqrt(pp)
+    #plt.plot(1./fp, pp,'k')
+    
+    #plt.xlim(0.0,max(t)/2)
+    
     
     aft = abs(ft)
-
-    f, cleaned, res = clean(t, x)
+    f, cleaned, res, sigma0 = clean(t, x)
     n2 = len(f) /2
-    cf = cleaned[n2+1:]/sigma
+    cf = cleaned[n2+1:]
     p = 1./f[n2+1:]
     cf = cf[p>1.1]
     p = p[p>1.1]
     i = np.argmax(cf)
-    if cf[i]>1.0:
-        period = p[i]
-    else:
-        period = 0.0
+    period = p[i]
     
     plt.subplot('514')
-    plt.plot(f, res, 'k')
-    
-    plt.subplot('515')
 
     plt.axvline(1, color='r')
     plt.axvline(p0, color='b')
     plt.axvline(period, color='g')
     plt.xlim(0.0,max(t)/2)
-    plt.plot(p[cf>0.01], cf[cf>0.01], 'k')
-    if cf[i]>1.0:
-        plt.xlabel('period = %.1f' % period)
+    plt.plot(p, cf, 'k')
+    plt.minorticks_on()
+    
+    plt.subplot('515')
+    from functions import phase
+    tp, yp = phase(t, x, period)
+    plt.scatter(tp,yp, c='k')
+    plt.scatter(tp+period,yp, c='k')
+    plt.xlim(0.0,period*2)
+    plt.ylim(min(x),max(x))
+    plt.xlabel('period = %.2f' % period)
+    
         
     plt.savefig('clean.pdf')
     plt.close()
