@@ -36,7 +36,7 @@ def ppsd(t, y, lower=0.001, upper=0.5, num=None, logspace=False):
     num: number of frequencies to probe
     '''
     from multiprocessing import Pool
-    from numpy import linspace, pi
+    from numpy import linspace, pi, array
     from functions import logspace
     if num is None:
         num = len(y)
@@ -49,7 +49,7 @@ def ppsd(t, y, lower=0.001, upper=0.5, num=None, logspace=False):
     p = pool.map(_worker, w)
     pool.close() # no more tasks
     pool.join()  # wrap up current tasks
-    return p, w/(2.0*pi)
+    return array(p), w/(2.0*pi)
 
 def mpsd(t, y):
     from multiprocessing import Queue, Process
@@ -99,17 +99,17 @@ def mpsd(t, y):
     k = argsort(f_result)    
     return [P_result[i] for i in k], [f_result[i] for i in k]   
 
-def psd(t, y):
+def psd(t, y, lower=0.001, upper=0.5):
     """
     Plain Least-Squares Periodogram
     adpted from http://www.sal.ufl.edu/eel6537_2010/LSP.pdf
     """
-    from numpy import linspace, array, empty, cos, sin, dot
+    from numpy import linspace, array, empty, cos, sin, dot, pi
     from numpy.linalg import inv
     
     N = len(y)
     
-    w = 2.0*pi*linspace(0.001,0.5,N)
+    w = 2.0*pi*linspace(lower, upper, N)
     result = empty(len(w))
     i = 0
     for wi in w:
