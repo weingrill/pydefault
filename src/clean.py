@@ -12,9 +12,9 @@ from matplotlib import pyplot as plt
 def dft(t, x):
     N = np.shape(t)[0]
     df = 1/(2*(t[-1]-t[0]))
-    k = 4
+    k = 8
     j = np.arange(-k*N, k*N)
-    f = j*df/k
+    f = 2*j*df/k
     A = np.ones([N, 2*k*N], dtype = complex)
     
     A = A * (-2.j * np.pi * f)
@@ -43,9 +43,9 @@ def idft(t, X, f=None):
 def window(t, x):
     N = np.shape(t)[0]
     df = 1/(1*(t[-1]-t[0]))
-    k = 8
+    k = 16
     j = np.arange(-k*N, k*N)
-    f = j*df/k
+    f = 2*j*df/k
     A = np.ones([N, 2*k*N], dtype = complex)
     
     A = A * (-2.j * np.pi * f)
@@ -136,16 +136,17 @@ def clean_crane(t, x, g = 0.2):
         
     return c, f
 
-def clean(t, x, gain = 0.5, threshold = 1e-4):
+def clean(t, x, gain = 0.5, threshold = 1e-4, maxiter = 1000):
     x -= np.mean(x)
     t -= t[0]
+    
     ft, f = dft(t, x)
     ftw, fw = window(t, x)
     aft = abs(ft)
     cleaned = np.zeros(len(ft))
     n2 = len(ft) / 2
-    sigma0 = np.std(aft[n2:])
-    for k in range(1000):
+    
+    for _ in range(maxiter):
         i = np.argmax(aft[n2:])
         ipos = i + n2
         ineg = n2 - i
@@ -164,7 +165,102 @@ def clean(t, x, gain = 0.5, threshold = 1e-4):
     from scipy import signal
     gauss = signal.gaussian(len(cleaned), 2)
     cleaned = signal.convolve(cleaned, gauss, mode='same')
-    return f, cleaned+aft, aft, sigma0
+    return f, cleaned+aft, aft
+
+def plot_lightcurve(t, x):
+    plt.plot(t, x*1000, 'ko-')
+    plt.minorticks_on()
+    plt.ylim(max(x*1000)+2, min(x*1000)-2)
+    plt.xlim(t[0],t[-1])
+    plt.ylabel('mmag')
+    
+def plot_dft(t, x):
+    ft, f = dft(t, x)
+    plt.plot(1./f[f>0.0], abs(ft)[f>0.0]/(2.0*np.var(x)), 'k')
+    plt.axvline(1, color='r', alpha=0.5)
+    plt.axvline(p0, color='b')
+    i = np.argmax(ft)
+    period = 1./f[i]
+    plt.axvline(period, color='g', alpha=0.5)
+
+    
+    plt.minorticks_on()
+    plt.xlim(0.0,max(t)/3)
+    plt.ylabel('S(p)')
+    plt.text(0.95, 0.9, 'DFT', va='top', horizontalalignment='right', transform=axis.transAxes)
+
+def plot_window(t, x):
+    #window
+    ftw, fw = window(t, x)
+    plt.plot(1./fw[fw>0.0], abs(ftw)[fw>0.0], 'k')
+    plt.xlim(0.0,max(t)/2)
+    plt.text(0.95, 0.9, 'window', verticalalignment='top', horizontalalignment='right', transform=axis.transAxes)
+
+def plot_lomb(t, x):
+    #lomb scargle
+    import scipy.signal as signal
+    nout = 1000
+    flomb = np.linspace(1./60., 1./0.05, nout)
+    pgram = signal.lombscargle(t, x, flomb)
+    norm = np.sqrt(4*(pgram/nout))/(2.0*np.var(x))
+    p = 2.*np.pi/flomb
+    plt.plot(p, norm,'k')
+
+    i = np.argmax(norm)
+    period = p[i]
+    plt.axvline(period, color='g', alpha=0.5)
+    plt.axvline(1, color='r', alpha=0.5)
+    plt.axvline(p0, color='b', alpha=0.5)
+
+    
+    plt.minorticks_on()
+    plt.xlim(0.0,max(t)/3)
+    plt.ylabel('S(p)')
+    plt.text(0.95, 0.9, 'Lomb-Scargle', verticalalignment='top', horizontalalignment='right', transform=axis.transAxes)
+
+def plot_clean(t, x):
+    f, cleaned, res = clean(t, x, gain=0.9, threshold=2e-3)
+    n2 = len(f) /2
+    cf = cleaned[n2+1:]/(2.0*np.var(x))
+    p = 1./f[n2+1:]
+    cf = cf
+    p = p
+    i = np.argmax(cf)
+    period = p[i]
+    
+    plt.axvline(1, color='r', alpha=0.5)
+    plt.axvline(p0, color='b', alpha=0.5)
+    plt.axvline(period, color='g', alpha=0.5)
+    plt.xlim(0.0,max(t)/3)
+    plt.plot(p, cf, 'k')
+    plt.minorticks_on()
+    plt.ylabel('S(p)')
+    plt.text(0.95, 0.9, 'CLEAN', verticalalignment='top', horizontalalignment='right', transform=axis.transAxes)
+    return period
+
+def plot_phase(t, x, period):
+    from functions import phase
+    tp, yp = phase(t, x, period)
+    plt.scatter(tp,yp*1000, c='k')
+    plt.scatter(tp+period,yp*1000, c='k')
+    plt.xlim(0.0,period*2)
+    plt.ylim(min(yp)*1000,max(yp)*1000)
+    plt.xlabel('period = %.2f' % period)
+    plt.axvline(period, linestyle='--', color='k')
+    plt.minorticks_on()
+    plt.ylabel('mmag')
+    plt.ylim(plt.ylim()[::-1])
+    
+def do_shuffle(t, x):
+    from random import shuffle
+    shuffle(x)
+    return t, x
+    
+
+def detrend(t, x):
+    par = np.polyfit(t, x, 1)
+    x -= par[0]*t + par[1]
+    return t, x
 
 if __name__ == '__main__':
     from glob import glob
@@ -173,40 +269,54 @@ if __name__ == '__main__':
     filename = '/work2/jwe/SOCS/M48/lightcurves/20140303A-0074-0013#1952.dat'
     t, x, corr = np.loadtxt(filename, unpack=True)
     t -= t[0]
+    #x = x[t>30]
+    #t = t[t>30]
+    #t -= t[0]
     #x -= corr
     x -= np.mean(x)
-    par = np.polyfit(t, x, 1)
-    
-    x -= par[0]*t + par[1]
+
+    t, x = detrend(t, x)
     #t = np.linspace(0,63, 100)
     p0 = 3.24
     #x = 0.3*np.sin(2.*np.pi*t/p0)+0.2
     #x += np.random.normal(scale=0.3, size=x.shape)
-    from random import shuffle
-    #shuffle(x)
+
+    from matplotlib import rcParams
+    params = {'backend': 'Agg',
+      'axes.labelsize': 8,
+      'axes.titlesize': 10,
+      'font.size': 8,
+      'xtick.labelsize': 8,
+      'ytick.labelsize': 8,
+      'figure.figsize': [17/2.54, 24/2.54],
+      'savefig.dpi' : 300,
+      'font.family': 'sans-serif',
+      'axes.linewidth' : 0.5,
+      #'xtick.major.size' : 2,
+      #'ytick.major.size' : 2,
+      }
+    rcParams.update(params)
     
-    plt.figure(figsize=(6,9))
+    plt.figure()
     plt.subplot('511')
-    plt.title(filename[36:-4])
-    plt.plot(t, x, 'ko-')
+    plt.title(filename[32:-4])
+    plot_lightcurve(t, x)
     
-    plt.subplot('512')
-    ft, f = dft(t, x)
-    plt.plot(1./f[f>0.0], abs(ft)[f>0.0], 'k')
-    plt.axvline(p0, color='b')
-    plt.xlim(0.0,max(t)/2)
+    axis = plt.subplot('512')
+    plot_dft(t, x)
     #sigma = np.std(ft[f>=0])
     
-    plt.subplot('513')
-    ftw, fw = window(t, x)
-    plt.plot(1./fw[fw>0.0], abs(ftw)[fw>0.0], 'k')
-    plt.xlim(0.0,max(t)/2)
-    
-    #import scipy.signal as signal
+    axis = plt.subplot('513')
+    plot_lomb(t, x)
+
+    #lomb scargle
     #nout = 1000
     #flomb = np.linspace(1./60., 1./0.05, nout)
-    #pgram = signal.lombscargle(t, x, flomb)
-    #plt.plot(2.*np.pi/flomb, np.sqrt(4*(pgram/nout)),'k')
+    #freq, pgram = lomb(t, x+14, RMS=1)
+    #norm = np.sqrt(4*(pgram/nout))
+    #plt.plot(1./freq, pgram,'k')
+    #plt.xlim(0.0,max(t)/2)
+
     
     #from psd import ppsd
     #pp, fp = ppsd(t, x, lower=1./60., upper=1./0.05, num=len(x)*8) 
@@ -216,36 +326,16 @@ if __name__ == '__main__':
     #plt.xlim(0.0,max(t)/2)
     
     
-    aft = abs(ft)
-    f, cleaned, res, sigma0 = clean(t, x)
-    n2 = len(f) /2
-    cf = cleaned[n2+1:]
-    p = 1./f[n2+1:]
-    cf = cf[p>1.1]
-    p = p[p>1.1]
-    i = np.argmax(cf)
-    period = p[i]
+    #aft = abs(ft)
     
-    plt.subplot('514')
+    axis = plt.subplot('514')
+    period = plot_clean(t, x)
 
-    plt.axvline(1, color='r')
-    plt.axvline(p0, color='b')
-    plt.axvline(period, color='g')
-    plt.xlim(0.0,max(t)/2)
-    plt.plot(p, cf, 'k')
-    plt.minorticks_on()
-    
     plt.subplot('515')
-    from functions import phase
-    tp, yp = phase(t, x, period)
-    plt.scatter(tp,yp, c='k')
-    plt.scatter(tp+period,yp, c='k')
-    plt.xlim(0.0,period*2)
-    plt.ylim(min(x),max(x))
-    plt.xlabel('period = %.2f' % period)
+    plot_phase(t, x, period)
     
         
-    plt.savefig('clean.pdf')
+    plt.savefig('/home/jwe/Pictures/Figures/clean.pdf')
     plt.close()
     
     
