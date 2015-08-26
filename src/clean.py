@@ -10,6 +10,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 def dft(t, x):
+    """
+    calculates the discrete Fourier transform of x(t) and returns X(f)
+    """
     N = np.shape(t)[0]
     df = 1/(2*(t[-1]-t[0]))
     k = 8
@@ -24,23 +27,29 @@ def dft(t, x):
     return X, f
 
 def idft(t, X, f=None):
+    """
+    calculates the inverse discrete Fourier transform of X(f) and returns x(t)
+    """
     N = np.shape(t)[0]
     M = np.shape(f)[0]
     assert X.shape == f.shape
-    k = 4.0
+    k = 8
     if f is None: 
-        k = 3
+        k = 8
         df = 1/(2*(t[-1]-t[0]))
         j = np.arange(-k*N, k*N)
         f = j*df
     A = np.ones([N, M], dtype = complex)
     A = A * (2.j * np.pi * f)
     A = np.exp(A.transpose() * t).transpose() * X.transpose()
-    x = np.sum(A, axis=1) /(2*k)
+    x = np.sum(A, axis=1) * N/2#/(2*k)
     assert( t.shape == x.shape)
     return t, x
 
 def window(t, x):
+    """
+    calculates the window function of x(t)
+    """
     N = np.shape(t)[0]
     df = 1/(1*(t[-1]-t[0]))
     k = 16
@@ -141,7 +150,7 @@ def clean(t, x, gain = 0.5, threshold = 1e-4, maxiter = 1000):
     t -= t[0]
     
     ft, f = dft(t, x)
-    ftw, fw = window(t, x)
+    ftw, _ = window(t, x)
     aft = abs(ft)
     cleaned = np.zeros(len(ft))
     n2 = len(ft) / 2
@@ -178,7 +187,7 @@ def plot_dft(t, x):
     ft, f = dft(t, x)
     plt.plot(1./f[f>0.0], abs(ft)[f>0.0]/(2.0*np.var(x)), 'k')
     plt.axvline(1, color='r', alpha=0.5)
-    plt.axvline(p0, color='b')
+#    plt.axvline(p0, color='b')
     i = np.argmax(ft)
     period = 1./f[i]
     plt.axvline(period, color='g', alpha=0.5)
@@ -210,7 +219,7 @@ def plot_lomb(t, x):
     period = p[i]
     plt.axvline(period, color='g', alpha=0.5)
     plt.axvline(1, color='r', alpha=0.5)
-    plt.axvline(p0, color='b', alpha=0.5)
+#    plt.axvline(p0, color='b', alpha=0.5)
 
     
     plt.minorticks_on()
@@ -219,7 +228,7 @@ def plot_lomb(t, x):
     plt.text(0.95, 0.9, 'Lomb-Scargle', verticalalignment='top', horizontalalignment='right', transform=axis.transAxes)
 
 def plot_clean(t, x):
-    f, cleaned, res = clean(t, x, gain=0.9, threshold=2e-3)
+    f, cleaned, _ = clean(t, x, gain=0.9, threshold=2e-3)
     n2 = len(f) /2
     cf = cleaned[n2+1:]/(2.0*np.var(x))
     p = 1./f[n2+1:]
@@ -229,7 +238,7 @@ def plot_clean(t, x):
     period = p[i]
     
     plt.axvline(1, color='r', alpha=0.5)
-    plt.axvline(p0, color='b', alpha=0.5)
+#    plt.axvline(p0, color='b', alpha=0.5)
     plt.axvline(period, color='g', alpha=0.5)
     plt.xlim(0.0,max(t)/3)
     plt.plot(p, cf, 'k')
@@ -262,24 +271,64 @@ def detrend(t, x):
     x -= par[0]*t + par[1]
     return t, x
 
-if __name__ == '__main__':
-    from glob import glob
-    filenames = glob('/work2/jwe/SOCS/M48/lightcurves.new/*.dat')
-    filename = filenames[47]
-    filename = '/work2/jwe/SOCS/M48/lightcurves/20140303A-0074-0013#1952.dat'
-    t, x, corr = np.loadtxt(filename, unpack=True)
+def loadfromfile(filename= None):
+    if filename is None:
+        from glob import glob
+        filenames = glob('/work2/jwe/SOCS/M48/lightcurves.new/*.dat')
+        filename = filenames[47]
+    t, x, _ = np.loadtxt(filename, unpack=True)
     t -= t[0]
-    #x = x[t>30]
-    #t = t[t>30]
-    #t -= t[0]
-    #x -= corr
     x -= np.mean(x)
+    return t, x
 
-    t, x = detrend(t, x)
-    #t = np.linspace(0,63, 100)
+def simulate():
+    t = np.linspace(0,63, 100)
     p0 = 3.24
-    #x = 0.3*np.sin(2.*np.pi*t/p0)+0.2
-    #x += np.random.normal(scale=0.3, size=x.shape)
+    x = 0.3*np.sin(2.*np.pi*t/p0)+0.2
+    x += np.random.normal(scale=0.3, size=x.shape)
+    return t, x
+
+def acorr(t, x):
+    p, f = dft(t, x)
+    pc = p.conjugate()
+    t1 = np.linspace(t[0], t[-1], 1000)
+    ti , xi = idft(t1, p*pc, f=f)
+    return ti, xi
+    
+
+def plot_acorr(t, x):
+    ta, ac = acorr(t, x)
+    print ta.shape, ac.shape
+    plt.plot(ta, ac, 'k')
+    plt.axvline(1, color='r', alpha=0.5)
+#    plt.axvline(period, color='g', alpha=0.5)
+    plt.xlim(0.0,max(t)/3)
+    plt.minorticks_on()
+    plt.ylabel('S(p)')
+    plt.text(0.95, 0.9, 'acorr', verticalalignment='top', horizontalalignment='right', transform=axis.transAxes)
+
+def plot_finterpol(t, x):
+    p,f = dft(t, x)
+    from scipy import signal
+    n = 1000
+    window = signal.gaussian(p.shape[0], std=150)
+    p = p * window
+    t1 = np.linspace(t[0], t[-1], n)
+    ti , xi = idft(t1, p, f=f)
+    
+    print ti.shape, xi.shape
+    plt.scatter(t, x* 1000, alpha = 0.5)
+    plt.plot(ti, xi, 'k')
+    plt.xlim(ti[0],ti[-1])
+    plt.minorticks_on()
+    plt.ylabel('mag')
+    #plt.text(0.95, 0.9, 'acorr', verticalalignment='top', horizontalalignment='right', transform=axis.transAxes)
+    
+
+if __name__ == '__main__':
+    filename = '/work2/jwe/SOCS/M48/lightcurves/20140303A-0074-0013#1952.dat'
+    t, x = loadfromfile(filename)    
+    t, x = detrend(t, x)
 
     from matplotlib import rcParams
     params = {'backend': 'Agg',
@@ -307,27 +356,10 @@ if __name__ == '__main__':
     #sigma = np.std(ft[f>=0])
     
     axis = plt.subplot('513')
-    plot_lomb(t, x)
-
-    #lomb scargle
-    #nout = 1000
-    #flomb = np.linspace(1./60., 1./0.05, nout)
-    #freq, pgram = lomb(t, x+14, RMS=1)
-    #norm = np.sqrt(4*(pgram/nout))
-    #plt.plot(1./freq, pgram,'k')
-    #plt.xlim(0.0,max(t)/2)
-
-    
-    #from psd import ppsd
-    #pp, fp = ppsd(t, x, lower=1./60., upper=1./0.05, num=len(x)*8) 
-    #pp = np.sqrt(pp)
-    #plt.plot(1./fp, pp,'k')
-    
-    #plt.xlim(0.0,max(t)/2)
-    
-    
-    #aft = abs(ft)
-    
+    #plot_lomb(t, x)
+    #plot_acorr(t, x)
+    plot_finterpol(t, x)
+        
     axis = plt.subplot('514')
     period = plot_clean(t, x)
 
