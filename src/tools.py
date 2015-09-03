@@ -27,7 +27,7 @@ class FileCache(str):
         self.cachefile = cachefile
         return self.cachefile
     
-def log(logfile, logstring='', silent=False, withtime=False):
+def log(logfile, logstring, silent=False, withtime=False):
     '''
     Created on Jan 14, 2013
 
