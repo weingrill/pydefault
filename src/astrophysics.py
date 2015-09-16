@@ -34,6 +34,28 @@ def bc(Teff):
     logT4 = log10(Teff)-4.0
     return -8.499*logT4**4 + 13.421*logT4**3 - 8.131*logT4**2 - 3.901*logT4 - 0.438
 
+def pvoigt(x, x0, omega, eta = 0.5):
+    """
+    calculate the Pseudo-Voigt profile vp
+    https://de.wikipedia.org/wiki/Voigt-Profil
+    
+    eta must be 0 < eta < 1
+    omega must be > 0
+    2omaga is the FWHM
+    """
+    
+    from numpy import exp, log
+    if omega <=0.0:
+        raise(ValueError)
+    if eta <= 0.0 or eta >= 1.0:
+        raise(ValueError)
+    
+    delta = ((x - x0)/omega)**2
+    g = exp(-log(2)*delta)
+    l = 1.0/(1 + delta)
+    vp = eta*l + (1-eta)*g
+    return vp
+
 r_sun = 6.96342e8
 m_sun = 1.9891e30
 
