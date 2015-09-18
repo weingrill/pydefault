@@ -12,7 +12,8 @@ class DataSource(object):
             self.database = psycopg2.connect(database=database, user=user, host=host) 
         finally:
             if dictcursor:
-                self.cursor = self.database.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                from psycopg2.extras import DictCursor
+                self.cursor = self.database.cursor(cursor_factory=DictCursor)
             else:
                 self.cursor = self.database.cursor()
     
