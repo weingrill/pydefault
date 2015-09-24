@@ -3,6 +3,37 @@ Created on Apr 17, 2013
 
 @author: jwe <jweingrill@aip.de>
 '''
+def format_block(block,nlspaces=0):
+    '''Format the given block of text, trimming leading/trailing
+    empty lines and any leading whitespace that is common to all lines.
+    The purpose is to let us list a code block as a multiline,
+    triple-quoted Python string, taking care of
+    indentation concerns.'''
+
+    import re
+
+    # separate block into lines
+    lines = str(block).split('\n')
+
+    # remove leading/trailing empty lines
+    while lines and not lines[0]:  del lines[0]
+    while lines and not lines[-1]: del lines[-1]
+
+    # look at first line to see how much indentation to trim
+    ws = re.match(r'\s*',lines[0]).group(0)
+    if ws:
+        lines = map( lambda x: x.replace(ws,'',1), lines )
+
+    # remove leading/trailing blank lines (after leading ws removal)
+    # we do this again in case there were pure-whitespace lines
+    while lines and not lines[0]:  del lines[0]
+    while lines and not lines[-1]: del lines[-1]
+
+    # account for user-specified leading spaces
+    flines = ['%s%s' % (' '*nlspaces,line) for line in lines]
+
+    return '\n'.join(flines)+'\n'
+
 class DataSource(object):
     def __init__(self, database=None, user=None, host=None, dictcursor=False):
         """Constructor: opens database on host using username"""
@@ -19,13 +50,13 @@ class DataSource(object):
     
     def query(self, querystring):
         """executes a query and returns result"""
-        self.cursor.execute(querystring)
+        self.cursor.execute(format_block(querystring))
         return self.cursor.fetchall()
 
     def execute(self, query, commit=True):
         """executes a query"""
         try:
-            self.cursor.execute(query)
+            self.cursor.execute(format_block(query))
         finally:
             if commit:
                 self.database.commit()
