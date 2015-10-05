@@ -66,7 +66,7 @@ def tau_gill(bv):
     return tau_int(bv)
 
 
-def tau(bv, gilliland = False):
+def tau(bv, gilliland = True):
     """
     Table 1 from Barnes & Kim 2010 p.678
     """
