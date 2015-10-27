@@ -159,3 +159,16 @@ def phase(t, y, period):
     tp = t % period
     i = tp.argsort()
     return tp[i], y[i]
+
+def smooth(x, n = 101, width = 2.0):
+    """
+    smooth using a gaussian kernel
+    """
+    from scipy import signal
+    from numpy.lib import pad 
+    kernel = signal.gaussian(n, width)
+    n = len(x)/2
+    padded_x = pad(x, n, mode='mean')
+    smoothed = signal.fftconvolve(padded_x, kernel, mode='same')[n:-n]/5
+    return smoothed
+    
