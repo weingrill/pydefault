@@ -171,4 +171,21 @@ def smooth(x, n = 101, width = 2.0):
     padded_x = pad(x, n, mode='mean')
     smoothed = signal.fftconvolve(padded_x, kernel, mode='same')[n:-n]/5
     return smoothed
+
+def largmin(array, i0, direction='left'):
+    """
+    finds the local minimum based on direction
+    """
+    if direction not in ['left', 'right']:
+        raise ValueError
     
+    if i0<0 or i0>len(array):
+        raise ValueError
+    i = i0
+    if direction=='left':
+        while i>0 and array[i-1]<array[i]:
+            i -= 1
+    elif direction=='right':
+        while i<len(array) and array[i+1]<array[i]:
+            i += 1
+    return i
