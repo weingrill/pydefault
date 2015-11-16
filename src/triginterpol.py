@@ -96,8 +96,8 @@ if __name__ == '__main__':
     y1 = f(x1)
     x2 = np.linspace(-1.0,8.0, 100)
     y2 =  tinterpol(x, y, x2)
-    import matplotlib
-    matplotlib.use('WXAgg')
+    #import matplotlib
+    #matplotlib.use('WXAgg')
     import matplotlib.pyplot as plt
     plt.scatter(x,y)
     plt.scatter(x1,y1,c='g', marker='s')
