@@ -140,9 +140,9 @@ def sigma_clip(t, y, e=None,sigmas=3.0):
     """
     performs sigma clipping on a lightcurve
     """
-    from numpy import mean, std, compress
-    m = mean(y)
-    s = std(y)
+    from numpy import nanmean, nanstd, compress
+    m = nanmean(y)
+    s = nanstd(y)
     valid = abs(y-m)<sigmas*s
     t_clipped = compress(valid, t)
     y_clipped = compress(valid, y)
@@ -165,7 +165,7 @@ def smooth(x, n = 101, width = 2.0):
     smooth using a gaussian kernel
     """
     from scipy import signal
-    from numpy.lib import pad 
+    from numpy import pad 
     kernel = signal.gaussian(n, width)
     n = len(x)/2
     padded_x = pad(x, n, mode='mean')
@@ -189,3 +189,8 @@ def largmin(array, i0, direction='left'):
         while i<len(array) and array[i+1]<array[i]:
             i += 1
     return i
+
+def runningmean(x, N=97):
+    from numpy import convolve, ones
+    return convolve(x, ones((N,))/N, mode='same')
+    

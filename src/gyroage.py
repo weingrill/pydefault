@@ -157,13 +157,13 @@ if __name__ == '__main__':
     from scipy.optimize import minimize
     import matplotlib.pyplot as plt
     
-    bv = np.linspace(0.0, 1.6, num=50)
+    bv = np.linspace(0.0, 1.6, num=100)
     #bv = np.linspace(0.473, 1.631, num=100)
     P = np.empty(len(bv))
     
-    P11 = gyroperiod(bv, 400)
-    P34 = gyroperiod(bv, 400, P0=3.4)
-    P01 = gyroperiod(bv, 400, P0=0.1)
+    P11 = gyroperiod(bv, 4000)
+    P34 = gyroperiod(bv, 4000, P0=3.4)
+    P01 = gyroperiod(bv, 4000, P0=0.1)
     
     for k in zip(bv,P01,P11,P34):
         print '%.2f\t%.3f\t%.3f\t%.3f' % k
