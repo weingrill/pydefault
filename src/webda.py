@@ -16,6 +16,12 @@ class WebdaError(Exception):
         return repr(self.value)
 
 class WebdaObject(dict):
+    """
+    
+    class to query the Webda webpage for some Open Cluster properties
+    
+    """
+    
     def __init__(self, identifier):
         data = {}
         data['cluster'] = identifier.replace(' ','+')
@@ -58,10 +64,24 @@ class WebdaObject(dict):
         # instantiate the parser and feed it some HTML
         parser = MyHTMLParser()
         parser.feed(results)
-        print parser.getdata()    
-        #print results
+        data = parser.getdata()
+        #print data
+        for key in data.keys():
+            self[key] = data[key]
+        
+    def __str__(self):
+        return """Right Ascension (2000): %(RA)s
+                  Declination (2000):     %(Dec)s
+                  Galactic longitude:     %(lon)7.3f
+                  Galactic latitude:      %(lat)6.3f
+                  Distance [pc]:          %(d)4.0f
+                  Reddening [mag]:        %(ebv)5.3f
+                  Distance modulus [mag]: %(DM)4.2f
+                  Log Age:                %(age)5.3f""" % self
+        
         
 if __name__ == '__main__':
-    wo = WebdaObject('NGC 6950')
+    wo = WebdaObject('NGC 6633')
+    print wo
     #wo1 = WebdaObject('NGC 6709')
     
