@@ -25,7 +25,7 @@ def breakup():
     minbv = argmin(bv)
     i = arange(minbv)
     
-    G = 6.673e-11
+    #G = 6.673e-11
     bv = bv[i]
     radius = radius[i]
     mass = mass[i]
@@ -34,27 +34,27 @@ def breakup():
     
     R_sun = 695660e3
     r = 10**radius * R_sun
-    M_sun = 1.98855e30
-    GM_sun = 1.32712442099e20
+    #M_sun = 1.98855e30
+    #GM_sun = 1.32712442099e20
     
-    omega = sqrt(GM_sun*mass / r**3)
+    #omega = sqrt(GM_sun*mass / r**3)
     
     P = sqrt(4.0*r*pi**2/g)/86400
-    Po = (2.0*pi/omega)/86400
+
+    for mi,ri,bvi,gi, ppi in zip(mass, radius, bv, logg, P):
+        print '%.3f %.3f %.3f %.3f %.3f' % (mi,ri,bvi,gi, ppi)    
     return bv, P
+
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     bv, P = breakup()
 #plt.plot(bv, omega, 'r', label='$\Omega$')
     plt.plot(bv, P,     'g', label='P')
-#plt.plot(bv, Po,    'b', label='P$_o$')
-
-#plt.xlabel('B - V')
-#plt.ylabel('P_$breakup$ [days]')
+    plt.xlabel('B - V')
+    plt.ylabel('P_$breakup$ [days]')
     plt.legend()
     plt.show()
+    plt.close()
 #print bv
 #print P
 
-#for mi,ri,bvi,gi, ppi in zip(mass, radius, bv, logg, P):
-#    print '%.2f %.2f %.2f %.2f %.2f' % (mi,ri,bvi,gi, ppi)
