@@ -3,7 +3,7 @@ Created on Apr 26, 2013
 
 @author: jwe
 '''
-def fits2db(filename, relname, database='corot', user='sro', host='pina'):
+def fits2db(filename, relname, database=None, user=None, host=None):
     from datasource import DataSource
     import pyfits
     import StringIO
