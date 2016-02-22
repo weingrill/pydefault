@@ -113,7 +113,7 @@ def clean_crane(t, x, g = 0.2):
     R = X
     #plt.subplot('211')
     #plt.plot(f,X,'r')
-    W = win(f)
+    #W = win(f)
     #plt.subplot('212')
     #plt.plot(W,'g')
     #plt.show()
