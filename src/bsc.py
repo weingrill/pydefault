@@ -4,11 +4,9 @@ Created on Apr 26, 2013
 @author: jwe
 '''
 if __name__ == '__main__':
-    import matplotlib
     import matplotlib.pyplot as plt
 
-    import pyfits
-    import pylab
+    import astropy.io.fits as pyfits
     from functions import scaleto
     from numpy import where, clip
     
@@ -31,15 +29,19 @@ if __name__ == '__main__':
     #plt.set_cmap('Spectral')
     plt.subplot(111, axisbg='darkblue')
     #Plejades, Hyades 03 47 00 +24 07.0
+    
+    bmkfov = 7.25 # degrees
+    xc, yc = 66.6, 16.8
+    x0 = xc - bmkfov/2
+    x1 = xc + bmkfov/2
+    y0 = yc - bmkfov/2
+    y1 = yc + bmkfov/2
+    
     plt.xlim(75.,50.)
     plt.ylim(10.,30.)
-    x0 = 66.6-7.25/2
-    x1 = 66.6+7.25/2
-    y0 = 16.8-7.25/2
-    y1 = 16.8+7.25/2
     plt.xlabel('R.A. (deg)')
     plt.ylabel('Dec. (deg)')
-    plt.plot([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0],'w',linestyle='--')
+    plt.plot([x0,x1,x1,x0,x0],[y0,y0,y1,y1,y0], 'w', linestyle='--')
     plt.grid(color='w')
-    plt.scatter(ra, dec, s=pts, c=-bv, edgecolor='none', cmap=pylab.cm.Spectral)  # @UndefinedVariable
+    plt.scatter(ra, dec, s=pts, c=-bv, edgecolor='none', cmap=plt.cm.Spectral)  # @UndefinedVariable
     plt.show()
