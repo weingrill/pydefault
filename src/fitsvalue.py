@@ -17,4 +17,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     hdr = pyfits.getheader(args.filename)
-    print hdr[args.key]
+    
+    try:
+        print hdr[args.key]
+    except KeyError:
+        print 'key "%s" not found in "%s"' %(args.key, args.filename)
+        print hdr.keys()
+    except ValueError:
+        for key in hdr.keys():
+            print key,'\t', hdr[key] 
