@@ -7,6 +7,13 @@ Created on Feb 6, 2013
 '''
 import pyfits
 import sys
+
+try:
+    hdr = pyfits.getheader(sys.argv[1],0)
+    for c in hdr.cards: print '%-8s = %s / %s' % c[0:3]
+except IndexError:
+    print 'no primary header found in %s' % sys.argv[1]
+    
 try:
     hdr = pyfits.getheader(sys.argv[1],1)
     for c in hdr.cards: print '%-8s = %s / %s' % c[0:3]
