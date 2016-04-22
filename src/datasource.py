@@ -85,6 +85,51 @@ class DataSource(object):
     def commit(self):
         """commit changes to table"""
         self.database.commit()
+    
+    def columns(self, tablename):
+        """returns the columns of the table"""
+        query = """SELECT column_name, data_type, character_maximum_length
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE table_name = '%s';""" % tablename
+        result = self.query(query)
+        column_names = [r[0] for r in result]
+        return column_names
+    
+    def data_types(self, tablename):
+        """returns the datatypes of the table"""
+        from numpy import bool_, int32, float16, float32
+        from astropy.coordinates import SkyCoord  # @UnresolvedImport
+        
+        query = """SELECT column_name, data_type, character_maximum_length
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE table_name = '%s';""" % tablename
+        result = self.query(query)
+        keys = [r[1] for r in result]
+        lens = [r[2] for r in result]
+        translate = {
+                     'character varying': 'S', 
+                     'real':    float16, 
+                     'integer': int32, 
+                     'double precision': float32,
+                     'point': SkyCoord,
+                     'boolean': bool_
+                     }
+        dtypes = [translate[k] for k in keys]
+        for i,dtype in enumerate(dtypes):
+            if dtype == 'S':
+                dtypes[i] = 'S'+str(lens[i])
+            
+        return dtypes
+        
+    def character_maximum_length(self, tablename):
+        """returns the datatypes of the table"""
+        query = """SELECT column_name, data_type, character_maximum_length
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE table_name = '%s';""" % tablename
+        result = self.query(query)
+        keys = [r[2] for r in result]
+        return keys
+
             
     def __exit__(self):
         """proxy function to close database"""
