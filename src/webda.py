@@ -70,14 +70,14 @@ class WebdaObject(dict):
             self[key] = data[key]
         
     def __str__(self):
-        return """Right Ascension (2000): %(RA)s
-                  Declination (2000):     %(Dec)s
-                  Galactic longitude:     %(lon)7.3f
-                  Galactic latitude:      %(lat)6.3f
-                  Distance [pc]:          %(d)4.0f
-                  Reddening [mag]:        %(ebv)5.3f
-                  Distance modulus [mag]: %(DM)4.2f
-                  Log Age:                %(age)5.3f""" % self
+        return  "Right Ascension (2000): %(RA)s\n" \
+                "Declination (2000):     %(Dec)s\n"\
+                "Galactic longitude:     %(lon)7.3f\n"\
+                "Galactic latitude:      %(lat)6.3f\n"\
+                "Distance [pc]:          %(d)4.0f\n"\
+                "Reddening [mag]:        %(ebv)5.3f\n"\
+                "Distance modulus [mag]: %(DM)4.2f\n"\
+                "Log Age:                %(age)5.3f\n" % self
         
         
 if __name__ == '__main__':

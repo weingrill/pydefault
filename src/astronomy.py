@@ -4,76 +4,10 @@ Created on Jan 24, 2013
 @author: jwe
 '''
 
-class Coordinates(object):
-    """
-    simple coordinates class.
-    """
-    def __init__(self, alpha, delta):
-        self.alpha = alpha
-        self.delta = delta
-    
-    def __repr__(self):
-        return '(%f,%f)' % (self.alpha, self.delta)
-        
-    def __str__(self):
-        alphadeg = dd2hms(self.alpha)
-        deltadeg = dd2dms(self.delta)
-        salpha = '%02d %02d %05.2f' % alphadeg
-        if self.delta<0 and self.delta>-1: 
-            sdelta = '-%02.2d %02d %04.1f' % deltadeg
-        else:
-            sdelta = '%-02.2d %02d %04.1f' % deltadeg
-        return salpha + ' ' + sdelta
-
 def now():
     """returns the current time in UT"""
     import datetime
     return datetime.datetime.utcnow()
-
-def airmass(h):
-    """
-    calulates the airmass as a function of height h in degrees
-    taken fom Wikipedia, Pickering (2002)
-    """
-    from numpy import sin, pi,array
-    
-    h = array(h)
-    if type(h)=='float':
-        if h < 0.0: h = 0.0
-        if h > 90.0: h = 90.0
-    if h.ndim==1:
-        h[h > 90.0] = 90.0
-        h[h < 1.0] = 1.0
-    
-    #if min(h) < 0.0 or max(h) > 90.0:
-    #    raise ValueError('h = %s must be in [0.,90.]' % h)
-        
-    return 1.0/sin((h + 244/(165 + 47*h**1.1))*pi/180)
-
-def height(a):
-    """
-    returns the height from a given airmass a,
-    since inversion of airmass function is difficult.
-    """
-    from scipy.optimize import newton
-    from numpy import array, searchsorted
-    
-    # we define predefined table since Newton's method is
-    # poor with bad x0 
-    airtable = array([38.75, 26.64, 19.64, 15.26, 12.36, 10.33, 8.85, 7.73, 6.85, 
-               6.15, 5.58, 5.1, 4.7, 4.36, 4.07, 3.81, 3.58, 3.38, 3.20,
-               3.04, 2.9, 2.77, 2.65, 2.54, 2.44, 2.35, 2.27, 2.19, 2.12, 
-               2.06, 1.99, 1.94, 1.88, 1.83, 1.78, 1.74, 1.7, 1.66, 1.62,
-               1.59, 1.55, 1.52, 1.49, 1.46, 1.44, 1.41, 1.39, 1.37, 1.34, 
-               1.32, 1.3, 1.29, 1.27, 1.25, 1.24, 1.22, 1.21, 1.19, 1.18, 
-               1.17, 1.15, 1.14, 1.13, 1.12, 1.11, 1.1, 1.09, 1.09, 1.08, 
-               1.07, 1.06, 1.06, 1.05, 1.05, 1.04, 1.04, 1.03, 1.03, 1.02, 
-               1.02, 1.02, 1.01, 1.01, 1.01, 1.01, 1., 1., 1., 1., 1., 1.])
-    
-    x0 = 90. - searchsorted(airtable[::-1], a)
-    f = lambda h, a: airmass(h) - a
-    return newton(f, x0 = x0, args = (a,))
-    
 
 def mag_distance(d):
     """
@@ -117,70 +51,6 @@ def jd(epoch):
         jdn = epoch.day + floor((153*m + 2)/5) + 365*y + floor(y/4) - 32083
     return jdn + (epoch.hour-12)/24. + epoch.minute/1440. + epoch.second/86400.
 
-def hms2dd(hms):
-    """convert hours, minutes seconds to degrees"""
-    import warnings
-    warnings.warn('Use SkyCoords instead', DeprecationWarning)
-    if type(hms) is str:
-        if hms.find(':')>0: 
-            hms = hms.split(':')
-        else:
-            hms = hms.split(' ')
-    hms = [float(h) for h in hms]
-    if len(hms)==2: hms.append(0.0)
-    return (abs(hms[0]) + hms[1]/60. + hms[2]/3600.)*15.
-
-def hms2hh(hms):
-    """convert hours, minutes seconds to decimal hours"""
-    import warnings
-    warnings.warn('Use SkyCoords instead', DeprecationWarning)
-    if type(hms) is str:
-        if hms.find(':')>0: 
-            hms = hms.split(':')
-        else:
-            hms = hms.split(' ')
-    hms = [float(h) for h in hms]
-    if len(hms)==2: hms.append(0.0)
-    return (hms[0] + hms[1]/60. + hms[2]/3600.)
-
-
-def dms2dd(dms):
-    """convert degrees, minutes seconds to degrees"""
-    from functions import sign
-    import warnings
-    warnings.warn('Use SkyCoords instead', DeprecationWarning)
-    if type(dms) is str:
-        if dms.find(':')>0: 
-            dms = dms.split(':')
-        else:
-            dms = dms.split(' ')
-    dms = [float(d) for d in dms]
-    if len(dms)==2: dms.append(0.0)
-    return sign(dms[0])*(abs(dms[0]) + dms[1]/60. + dms[2]/3600.)
-
-def dd2dms(degrees):
-    """convert degrees to degrees, minutes, seconds"""
-    from math import trunc
-    from functions import sign
-    import warnings
-    warnings.warn('Use SkyCoords instead', DeprecationWarning)
-    adegrees = abs(degrees)
-    d = trunc(adegrees)
-    m = trunc((adegrees-d)*60.)
-    s = ((adegrees-d)*60.-m)*60. 
-    return (sign(degrees)*d,m,s)
-
-def dd2hms(degrees):
-    """convert degrees to hours, minutes, seconds"""
-    from math import trunc
-    import warnings
-    warnings.warn('Use SkyCoords instead', DeprecationWarning)
-    h = trunc(degrees/15.)
-    frac_hours = degrees/15. - h
-    m = trunc(frac_hours*60.)
-    frac_minutes=(frac_hours)*60. - m
-    s = frac_minutes*60. 
-    return (h,m,s)
 
 def mjd(datetime):
     """returns the modified Julian date (MJD) of a given time."""
@@ -370,5 +240,4 @@ if __name__ == '__main__':
     #print n
     #print jd(n),mjd(n),caldat(mjd(n))
     #print dd2dms(-5.75)
-    c = Coordinates(0.125, -0.125)
-    print c
+    

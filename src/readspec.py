@@ -62,7 +62,7 @@ if __name__ == '__main__':
     from pylab import *
     #import wav2rgb
     
-    speclist = pyspeckit.wrappers.load_IRAF_multispec('/work1/jwe/Dropbox/Public/ses1/science20130410B-0008_botzfxsEcd.fits')
+    speclist = pyspeckit.wrappers.load_IRAF_multispec('/work2/jwe/stella/ses1/science20130410B-0008_botzfxsEcd.fits')
     
     for spec in speclist:
         spec.units="Counts"
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     
     spec.plotter.refresh()    
 
-    f = '/Users/jwe/Dropbox/Public/ses1/science20130408B-0030_botzfxsEcd.fits'
+    f = '/work2/jwe/stella/ses1/science20130408B-0030_botzfxsEcd.fits'
     sp = Spectrum()
     #sp.continuum(200)
     sp.fromfile(f)

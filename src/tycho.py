@@ -12,7 +12,7 @@ def tycho(ra_center, dec_center, fov = 1.0, grid=True, background=True, show=Tru
     from pylab.cm import Spectral  # @UnresolvedImport
     
     tycho = DataSource(database='stella', host='pera.aip.de', user='stella')
-    query = """select mradeg, mdedeg, vt, bt-vt
+    query = """select radeg, dedeg, vt, bt-vt
          from tycho where circle(point(%f,%f),%f) @> circle(coord,0)
          and not bt-vt is null;""" % (ra_center, dec_center, fov)
     data = tycho.query(query)

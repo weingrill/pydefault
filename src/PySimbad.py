@@ -1,3 +1,10 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+'''
+Updated on May 24, 2016
+
+@author: Joerg Weingrill <jweingrill@aip.de>
+'''
 import urllib2
 import urllib
 
@@ -116,9 +123,7 @@ class SimbadObject(dict):
                          nfloat(sv[1]),
                          nint(sv[2]),
                          nstr(sv[3].strip('()')),
-                         nstr(sv[4]),
-                         nstr(sv[5]),
-                         nstr(sv[6])]
+                         nstr(sv[4])]
                 
             elif key == 'Spectral type':
                 value = [nstr(s) for s in sv]
@@ -162,8 +167,24 @@ class SimbadObject(dict):
                          nstr(ident.strip()), 
                          errarr, 
                          ref.strip()]
+            elif key == 'Coordinates(ICRS,ep=J2000,eq=2000)':
+                value = self.pop(key).strip()
+                key = 'ICRS Coordinates'    
+                coords, _, rest = value.partition('(')
+                src, _, rest = rest.partition(')')
+                ident, _, rest = rest.partition('[')
+                err, _, ref = rest.partition(']')
+                err = err.split()
+                errarr = [nfloat(err[0]),nfloat(err[1]), nint(err[2])]
+                value = [coords.strip(), 
+                         nstr(src.strip()), 
+                         nstr(ident.strip()), 
+                         errarr, 
+                         ref.strip()]
+            elif key == 'hierarchy counts':
+                value = self.pop(key)
             else:
-                print key,':'
+                print 'Unidentified key "%s":' % key,
                 print sv
             self.update({key:value})
             key, value = None, None
@@ -239,16 +260,31 @@ def SimbadCoord(psr):
     return coords
 
 if __name__ == '__main__':
-    #s = SimbadObject('HD192043')
-    #s = SimbadObject('NGC6882')
-    #print s['ICRS Coordinates']
-    #s1 = SimbadObject('HD192043')
-    #print s1['ICRS Coordinates']
-    s2 = SimbadObject('M 67')
-    print s2['ICRS Coordinates']
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Python Simbad interface')
+    parser.add_argument('-s', '--show_keys', action='store_true', help='show available Simbad keys for the given object')
+    parser.add_argument('-c', '--coordinates', action='store_true', help='return only the coordinates for the given object')
+    parser.add_argument('-k', '--key', help='specific key for the object')
+    parser.add_argument('object', help='object to query')
+
+    args = parser.parse_args()
     
-    #print simcoo('123.332697 -5.558109')
-    #m48 = simbad('M48')
-    #for k in m48.keys():
-    #    print k,'\t',m48[k]
+    s = SimbadObject(args.object)
+    if args.show_keys:
+        for k in s.keys():
+            print k
+        exit()
+    if args.coordinates:
+        print s['ICRS Coordinates']
+        exit()
+    if args.key in s:
+        if args.key == 'Identifiers':
+            for identifier in s[args.key]:
+                print identifier
+            exit()
+        print s[args.key]
+        exit()
+    for k in s.keys():
+            print k,'\t',s[k]
     
