@@ -235,9 +235,3 @@ class observer(object):
         return 280.46061837 + 360.98564736629*(self.time-2451545.0) + \
                0.000387933*t**2 - t**3/38710000.0
                
-if __name__ == '__main__':
-    #n = now()
-    #print n
-    #print jd(n),mjd(n),caldat(mjd(n))
-    #print dd2dms(-5.75)
-    
