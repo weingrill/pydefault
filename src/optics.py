@@ -53,12 +53,14 @@ class Detector(object):
         requires pixels with two entries: [width, height]
         pixelsize (assumed to be quadratic)
         """
-        detectors = {'ICX205AL':([1280,960],4.65e-6),
-                 'ICX204AL':([1024,768],4.65e-6),
-                 'ICX098BL': ([640,480],5.6e-6),
-                 'ICX618ALA':([640,480],5.6e-6),
-                 'AR0130CS':([1280,960],3.75e-6), #ASI120MM
-                 'STA1600LN': ([10560,10560], 9e-6)
+        detectors = {'ICX205AL':([1280, 960],4.65e-6),
+                 'ICX204AL':    ([1024, 768],4.65e-6),
+                 'ICX098BL':    ([640, 480],5.6e-6),
+                 'ICX618ALA':   ([640, 480],5.6e-6),
+                 'AR0130CS':    ([1280, 960],3.75e-6), #ASI120MM
+                 'STA1600LN':   ([10560, 10560], 9e-6),
+                 'IMX174LLJ':   ([1936, 1216], 5.86e-6), #ASI 174 MM
+                 'Canon1200':   ([5184 , 3456], 4.3e-6) #Canon 1200Da
                  }
         if name in detectors:
             pixels, pixelsize = detectors[name]
@@ -146,11 +148,20 @@ class Telescope(object):
                  'Cassegrain50': (0.5, 7.5),
                  'Zeiss110':     (0.11, 0.11*7.5),
                  'BMK':          (0.30, 0.75),
-                 'ETX':          (0.08, 0.4)}
+                 'ETX':          (0.08, 0.4),
+                 'ASA8H':        (0.2, 0.56),
+                 'TS100':        (0.1, 0.58),
+                 'Omegon714':    (0.102, 0.714)}
         if name in teldb:
             diameter, focallength = teldb[name]
+            print teldb[name]
         self.diameter = diameter
         self.focallength = focallength
+        if self.diameter is None:
+            raise(ValueError,'diameter or name must be set')
+        
+        if self.focallength is None:
+            raise(ValueError,'focallength or name must be set')
         self.name = name
     
     @property
