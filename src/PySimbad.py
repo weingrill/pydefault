@@ -4,6 +4,9 @@
 Updated on May 24, 2016
 
 @author: Joerg Weingrill <jweingrill@aip.de>
+
+superseeded by AstroQuery
+https://astroquery.readthedocs.io/en/latest/
 '''
 import urllib2
 import urllib
@@ -175,7 +178,10 @@ class SimbadObject(dict):
                 ident, _, rest = rest.partition('[')
                 err, _, ref = rest.partition(']')
                 err = err.split()
-                errarr = [nfloat(err[0]),nfloat(err[1]), nint(err[2])]
+                try:
+                    errarr = [nfloat(err[0]),nfloat(err[1]), nint(err[2])]
+                except IndexError:
+                    errarr = [nfloat(err[0]),nfloat(err[1])]
                 value = [coords.strip(), 
                          nstr(src.strip()), 
                          nstr(ident.strip()), 
