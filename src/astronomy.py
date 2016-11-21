@@ -53,11 +53,17 @@ def jd(epoch):
 
 
 def mjd(datetime):
-    """returns the modified Julian date (MJD) of a given time."""
+    """
+    returns the modified Julian date (MJD) of a given time.
+    superseded by astropy.time
+    """
     return jd(datetime)-2400000.5
 
 def caldat(mjd):
-    """returns the datetime value of the given MJD mjd"""
+    """
+    returns the datetime value of the given MJD mjd
+    superseded by astropy.time
+    """
     from datetime import datetime
     from math import floor
     a = int(mjd + 2400001.0)
@@ -234,4 +240,3 @@ class observer(object):
         t = (self.time - 2451545.0)/36525.
         return 280.46061837 + 360.98564736629*(self.time-2451545.0) + \
                0.000387933*t**2 - t**3/38710000.0
-               
