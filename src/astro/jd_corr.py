@@ -36,8 +36,8 @@ import astropy.coordinates as coords
 import astropy.units as u
 import astropy.constants as const
 
-import jplephem
-import de423
+import jplephem  # @UnresolvedImport
+import de423  # @UnresolvedImport
 
 VISTA_LAT = -24.6157    # Geographic coordinates of observatory
 VISTA_LON = -70.3976
