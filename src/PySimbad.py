@@ -5,7 +5,7 @@ Updated on May 24, 2016
 
 @author: Joerg Weingrill <jweingrill@aip.de>
 
-superseeded by AstroQuery
+superseded by AstroQuery
 https://astroquery.readthedocs.io/en/latest/
 '''
 import urllib2
