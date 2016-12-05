@@ -13,7 +13,7 @@ class DBTable(Table):
     '''
 
 
-    def __init__(self, datasource, tablename, condition=None):
+    def __init__(self, datasource, tablename, condition='True'):
         '''
         Constructor
         '''
@@ -24,7 +24,6 @@ class DBTable(Table):
         # crude assumption: key is the first column
         Table.__init__(self, key = columns[0], columns = columns)
         
-        if condition is None: condition = 'True'
         query = "SELECT * FROM %s WHERE %s;" % (tablename, condition)
         data = datasource.query(query)
         self.append(data)
