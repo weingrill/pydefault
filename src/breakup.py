@@ -41,8 +41,8 @@ def breakup():
     
     P = sqrt(4.0*r*pi**2/g)/86400
 
-    for mi,ri,bvi,gi, ppi in zip(mass, radius, bv, logg, P):
-        print '%.3f %.3f %.3f %.3f %.3f' % (mi,ri,bvi,gi, ppi)    
+    #for mi,ri,bvi,gi, ppi in zip(mass, radius, bv, logg, P):
+    #    print '%.3f %.3f %.3f %.3f %.3f' % (mi,ri,bvi,gi, ppi)    
     return bv, P
 
 if __name__ == '__main__':
