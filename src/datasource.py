@@ -48,9 +48,12 @@ class DataSource(object):
             else:
                 self.cursor = self.database.cursor()
     
-    def query(self, querystring):
+    def query(self, querystring, queryparameters=None):
         """executes a query and returns result"""
-        self.cursor.execute(format_block(querystring))
+        if queryparameters is None:
+            self.cursor.execute(format_block(querystring))
+        else:
+            self.cursor.execute(format_block(querystring), queryparameters)
         return self.cursor.fetchall()
 
     def execute(self, query, commit=True):
