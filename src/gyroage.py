@@ -191,9 +191,11 @@ if __name__ == '__main__':
     #bv = np.linspace(0.473, 1.631, num=100)
     P = np.empty(len(bv))
     
-    P11 = gyroperiod(bv, 425)
-    P34 = gyroperiod(bv, 425, P0=3.4)
-    P01 = gyroperiod(bv, 425, P0=0.1)
+    age = 600
+    
+    P11 = gyroperiod(bv, age)
+    P34 = gyroperiod(bv, age, P0=3.4)
+    P01 = gyroperiod(bv, age, P0=0.1)
     
     for k in zip(bv,P01,P11,P34):
         print '%.2f\t%.3f\t%.3f\t%.3f' % k
@@ -208,7 +210,7 @@ if __name__ == '__main__':
     plt.plot(bv_b,P_b, 'k')
     plt.xlabel('B - V')
     plt.ylabel('P rot')
-    plt.title('400 Myr')
+    plt.title('%d Myr' % age)
     plt.grid()
     plt.show()
     exit()
