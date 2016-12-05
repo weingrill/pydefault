@@ -9,7 +9,7 @@ https://www.aavso.org/cgi-bin/apass_download.pl?ra=08+13+43&dec=-05+45+00&radius
 '''
 
 import urllib2
-import urllib
+#import urllib
 
 class Apass(object):
     '''
@@ -56,7 +56,7 @@ class Apass(object):
         data['ra'], data['dec'] = self._coordinates2string()
         data['radius'] = self.radius
         data['outtype'] = outtype
-        url_values = urllib.urlencode(data)
+        #url_values = urllib.urlencode(data)
         url = 'https://www.aavso.org/cgi-bin/apass_download.pl'
         #full_url = url + '?' + url_values
         full_url = url +'?ra=%(ra)s&dec=%(dec)s&radius=%(radius)s&outtype=%(outtype)s' % data
