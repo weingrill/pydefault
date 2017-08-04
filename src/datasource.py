@@ -41,12 +41,14 @@ class DataSource(object):
         
         try:
             self.database = psycopg2.connect(database=database, user=user, host=host) 
-        finally:
-            if dictcursor:
-                from psycopg2.extras import DictCursor
-                self.cursor = self.database.cursor(cursor_factory=DictCursor)
-            else:
-                self.cursor = self.database.cursor()
+        except psycopg2.OperationalError:
+            raise(psycopg2.OperationalError)
+            
+        if dictcursor:
+            from psycopg2.extras import DictCursor
+            self.cursor = self.database.cursor(cursor_factory=DictCursor)
+        else:
+            self.cursor = self.database.cursor()
     
     def query(self, querystring, queryparameters=None):
         """executes a query and returns result"""
@@ -132,6 +134,9 @@ class DataSource(object):
         result = self.query(query)
         keys = [r[2] for r in result]
         return keys
+
+    def description(self):
+        return self.database.description()
 
             
     def __exit__(self):
