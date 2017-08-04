@@ -36,9 +36,38 @@ class DBTable(Table):
         result = self.datasource.query(query)
         return [r[0] for r in result]
 
+
+class DBArray(object):
+    def __init__(self, datasource, tablename, condition='TRUE'):
+        '''
+        Constructor
+        '''
+        self.datasource = datasource
+        self.tablename = tablename
+        
+        query = "SELECT * FROM %s WHERE %s;" % (tablename, condition)
+        data = self.datasource.query(query)
+        #self.append(data)
+    
+        columns = self.datasource.columns(self.tablename)
+        data_types = self.datasource.data_types(self.tablename)
+        
+        for c,d in zip(columns, data_types):
+            print c,d
+        arraydata = []
+        for star in self._stars:
+            arraydata.append(tuple(star))
+        self.array = np.array(arraydata, dtype = zip(columns, data_types))    
+
 if __name__ == '__main__':
     from datasource import DataSource
+    import matplotlib.pyplot as plt
+    import numpy as np
     ds = DataSource(database='stella', user='stella', host='pera.aip.de')
+    
+    a = DBArray(ds, 'ngc6633')
+    plt.plot(a['bv'],a['period'])
+    plt.show()
     
     t = DBTable(ds, 'm48phot', condition="starid LIKE '%F1%' ORDER BY ra")
     
@@ -46,14 +75,11 @@ if __name__ == '__main__':
     print t['starid']
     print t['JCS-F1-003']
     
-    import matplotlib.pyplot as plt
-    #plt.plot(t[:,'bv'], t[:,'vmag'],',')
-    import numpy as np
     x = t['ccdy']
     y = t['ra']
     p = np.polyfit(x, y, 1)
     print p
-    plt.plot(x, y-np.polyval(p, x))
+    plt.plot(x, y-np.polyval(p, x),'o')
     plt.show()
     
     #print r.column('zero')        
