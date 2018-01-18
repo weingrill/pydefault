@@ -3,7 +3,12 @@
 '''
 Created on Jul 13, 2015
 
-@author: Joerg Weingrill <jweingrill@aip.de>
+@author: Joerg Weingrill
+@contact: jweingrill@aip.de
+@copyright: Copyright 2015, Leibniz Institut für Astrophysik Potsdam (AIP)
+@license: MIT
+@date: 2015-07-13
+@version: 1.0.0
 '''
 
 import numpy as np
@@ -12,6 +17,7 @@ from matplotlib import pyplot as plt
 def dft(t, x):
     """
     calculates the discrete Fourier transform of x(t) and returns X(f)
+    required by clean function
     """
     N = np.shape(t)[0]
     df = 1/(2*(t[-1]-t[0]))
@@ -49,7 +55,9 @@ def idft(t, X, f=None):
 def window(t, x):
     """
     calculates the window function of x(t)
+    required by clean function
     """
+    assert( t.shape == x.shape)
     N = np.shape(t)[0]
     df = 1/(1*(t[-1]-t[0]))
     k = 16
@@ -111,24 +119,11 @@ def clean_crane(t, x, g = 0.2):
     #1 search maximum in R
     #R = real(f)
     R = X
-    #plt.subplot('211')
-    #plt.plot(f,X,'r')
-    #W = win(f)
-    #plt.subplot('212')
-    #plt.plot(W,'g')
-    #plt.show()
     for _ in range(N):
         p = np.argmax(abs(real[f >= 0.0])) + N
         Rp = R[p]
         fp = f[p]
-        #print p, fp, Rp, np.max(Rp)
         assert(fp>=0.0)
-        
-        #plt.plot(f, R, 'r')
-        #plt.plot(f, g*Rp*win(f - fp), 'g')
-        #plt.axvline(fp, linestyle='--')
-        #plt.axhline(Rp, linestyle='--')
-        #plt.show()
         
         if fp>0:                                     # (A14a)
             R = R - g*(Rp*win(f - fp) + np.conj(Rp)*win(f + fp))
@@ -141,11 +136,40 @@ def clean_crane(t, x, g = 0.2):
         elif fp == 0.0:
             c[f == 0.0] += g * Rp                      # (A15c)
     
-    #def C(f):
-        
     return c, f
 
-def clean(t, x, gain = 0.5, threshold = 1e-4, maxiter = 1000):
+def clean(t, x, gain = 0.1, threshold = 1e-4, maxiter = 1000):
+    """implementation of the CLEAN algorithm after Roberts et al. (1987)
+    :INPUTS:
+       t -- (array) independent variable data
+       x -- (array) dependent variable data
+    
+    :OPTIONAL INPUT:
+        gain -- gain value for the removal of windowd signal
+        threshold -- threshold value, when to abort the iterations
+        maxiter -- maximum number of iterations; low gain values need more 
+                iterations
+    :OUTPUTS:    a tuple of three arrays
+        f -- frequencies
+        cleaned -- cleaned amplitudes spectrum
+        aft -- residual spectrum
+    :EXAMPLE:
+        t = np.linspace(0.0, 20.0, 100)
+        noise = 0.1*np.random.randn(100)
+        signal = 7.0 + 0.1*np.sin(t*2.0*np.pi/P) + noise
+        window = np.sin(t*2.0*np.pi/1.0)
+        i = np.where(window>=0.0)
+        t = t[i]
+        signal = signal[i]
+        f, a, a1 = clean(t, signal, gain=0.5)        
+    :NOTES:
+        this algorithm can't perform miracles. If the signal is in the order of
+        the integrated window amplitude by means snr converges to one, the CLEAN 
+        algorithm will fail and pick up spurious signals.
+    :REQUIREMENTS:    :doc: `numpy`
+    """
+    import warnings
+    
     x -= np.mean(x)
     t -= t[0]
     
@@ -154,23 +178,27 @@ def clean(t, x, gain = 0.5, threshold = 1e-4, maxiter = 1000):
     aft = abs(ft)
     cleaned = np.zeros(len(ft))
     n2 = len(ft) / 2
+    k = 0
     
-    for _ in range(maxiter):
+    for k in range(maxiter):
         i = np.argmax(aft[n2:])
         ipos = i + n2
         ineg = n2 - i
         amp = gain*aft[ipos]
+        assert(aft[ipos]==aft[ineg])
+        assert(aft[ipos]==np.max(aft[n2:]))
         sigma = np.std(aft[n2:])
-        if amp < sigma or amp < threshold: break
-        #print k, i, amp, sigma
+        if amp < gain*sigma or amp < threshold: break
         
-        cleaned[ipos] += amp/gain
-        cleaned[ineg] += amp/gain
+        cleaned[ipos] += amp
+        cleaned[ineg] += amp
         pftw = np.roll(abs(ftw), i)[n2:len(ft)+n2]
         pftw += np.roll(abs(ftw), -i)[n2:len(ft)+n2]
-#        plt.plot(f,pftw)
         aft = abs(aft - amp*pftw)
-    
+    if k==maxiter-1:
+        warnings.warn("maxiter reached!")
+    if k==0:
+        warnings.warn("no iterations were performed") 
     from scipy import signal
     gauss = signal.gaussian(len(cleaned), 2)
     cleaned = signal.convolve(cleaned, gauss, mode='same')
@@ -183,7 +211,7 @@ def plot_lightcurve(t, x):
     plt.xlim(t[0],t[-1])
     plt.ylabel('mmag')
     
-def plot_dft(t, x):
+def plot_dft(t, x, axis):
     ft, f = dft(t, x)
     plt.plot(1./f[f>0.0], abs(ft)[f>0.0]/(2.0*np.var(x)), 'k')
     plt.axvline(1, color='r', alpha=0.5)
@@ -198,14 +226,14 @@ def plot_dft(t, x):
     plt.ylabel('S(p)')
     plt.text(0.95, 0.9, 'DFT', va='top', horizontalalignment='right', transform=axis.transAxes)
 
-def plot_window(t, x):
+def plot_window(t, x, axis):
     #window
     ftw, fw = window(t, x)
     plt.plot(1./fw[fw>0.0], abs(ftw)[fw>0.0], 'k')
     plt.xlim(0.0,max(t)/2)
     plt.text(0.95, 0.9, 'window', verticalalignment='top', horizontalalignment='right', transform=axis.transAxes)
 
-def plot_lomb(t, x):
+def plot_lomb(t, x, axis):
     #lomb scargle
     import scipy.signal as signal
     nout = 1000
@@ -227,7 +255,7 @@ def plot_lomb(t, x):
     plt.ylabel('S(p)')
     plt.text(0.95, 0.9, 'Lomb-Scargle', verticalalignment='top', horizontalalignment='right', transform=axis.transAxes)
 
-def plot_clean(t, x):
+def plot_clean(t, x, axis):
     f, cleaned, _ = clean(t, x, gain=0.9, threshold=2e-3)
     n2 = len(f) /2
     cf = cleaned[n2+1:]/(2.0*np.var(x))
@@ -296,7 +324,7 @@ def acorr(t, x):
     return ti, xi
     
 
-def plot_acorr(t, x):
+def plot_acorr(t, x, axis):
     ta, ac = acorr(t, x)
     print ta.shape, ac.shape
     plt.plot(ta, ac, 'k')
@@ -311,8 +339,8 @@ def plot_finterpol(t, x):
     p,f = dft(t, x)
     from scipy import signal
     n = 1000
-    window = signal.gaussian(p.shape[0], std=150)
-    p = p * window
+    gaussian_window = signal.gaussian(p.shape[0], std=150)
+    p = p * gaussian_window
     t1 = np.linspace(t[0], t[-1], n)
     ti , xi = idft(t1, p, f=f)
     
@@ -324,8 +352,7 @@ def plot_finterpol(t, x):
     plt.ylabel('mag')
     #plt.text(0.95, 0.9, 'acorr', verticalalignment='top', horizontalalignment='right', transform=axis.transAxes)
     
-
-if __name__ == '__main__':
+def _test():
     filename = '/work2/jwe/SOCS/M48/lightcurves/20140303A-0074-0013#1952.dat'
     t, x = loadfromfile(filename)    
     t, x = detrend(t, x)
@@ -351,17 +378,17 @@ if __name__ == '__main__':
     plt.title(filename[32:-4])
     plot_lightcurve(t, x)
     
-    axis = plt.subplot('512')
-    plot_dft(t, x)
+    axis2 = plt.subplot('512')
+    plot_dft(t, x, axis2)
     #sigma = np.std(ft[f>=0])
     
-    axis = plt.subplot('513')
+    plt.subplot('513')
     #plot_lomb(t, x)
     #plot_acorr(t, x)
     plot_finterpol(t, x)
         
-    axis = plt.subplot('514')
-    period = plot_clean(t, x)
+    axis4 = plt.subplot('514')
+    period = plot_clean(t, x,axis4)
 
     plt.subplot('515')
     plot_phase(t, x, period)
@@ -370,4 +397,7 @@ if __name__ == '__main__':
     plt.savefig('/home/jwe/Pictures/Figures/clean.pdf')
     plt.close()
     
-    
+
+
+if __name__ == '__main__':
+    _test()
