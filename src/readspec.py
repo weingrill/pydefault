@@ -4,7 +4,13 @@ Created on 17.04.2013
 @author: jwe
 '''
 import numpy as np
+import matplotlib.pyplot as plt
 class Spectrum(object):
+    spectrum = None
+    raw = None
+    sigma = None
+    intensity = None
+    wavelength = None
     def __init__(self):
         mu, sigma = 1.0, 0.01 # mean and standard deviation
         r = 1000
@@ -13,11 +19,11 @@ class Spectrum(object):
         x = self.wavelength
         loc = 550.0
         scale = 3.0
-        g = 0.2*np.exp( - (x - loc)**2 / (2 * scale**2) )
+        g = 0.2*np.exp(-(x - loc)**2 / (2 * scale**2))
         self.intensity -= g
         loc = 656.0
         scale = 3.0
-        g = 0.1*np.exp( - (x - loc)**2 / (2 * scale**2) )
+        g = 0.1*np.exp(-(x - loc)**2 / (2 * scale**2))
         self.intensity += g
         self.cont = None
         
@@ -26,7 +32,7 @@ class Spectrum(object):
     
         filename = '/work1/jwe/Dropbox/Public/ses1/science20130410B-0008_botzfxsEcd.fits'
         hdulist = pyfits.open(filename)
-        hdr = hdulist[0].header
+        #hdr = hdulist[0].header
         data = hdulist[0].data
         self.spectrum = data[0,40]
         self.raw = data[1,40]
@@ -37,21 +43,21 @@ class Spectrum(object):
         hdulist.close()
     
     def continuum(self, width):   
-        from numpy import array, ones, hstack
+        #from numpy import array, ones, hstack
         from scipy.stats import hmean
         c = [] 
-        leftpad = ones(width/2)*self.intensity[0]
-        rightpad = ones(width-width/2)*self.intensity[-1]
-        padded = hstack((leftpad, self.intensity, rightpad))
+        leftpad = np.ones(width/2)*self.intensity[0]
+        rightpad = np.ones(width-width/2)*self.intensity[-1]
+        padded = np.hstack((leftpad, self.intensity, rightpad))
 
         for i in range(len(self.intensity)):
             p = padded[i:i+width]
             hm = hmean(p)
             c.append(hm*width)
-        self.cont = array(c)
+        self.cont = np.array(c)
         
     def plot(self):
-        import matplotlib.pyplot as plt
+        
         #plt.scatter(self.wavelength,self.intensity)
         plt.plot(self.spectrum,'r')
         plt.plot(self.raw,'b')
@@ -59,7 +65,7 @@ class Spectrum(object):
         
 if __name__ == '__main__':
     import pyspeckit
-    from pylab import *
+    import matplotlib.cm
     #import wav2rgb
     
     speclist = pyspeckit.wrappers.load_IRAF_multispec('/work2/jwe/stella/ses1/science20130410B-0008_botzfxsEcd.fits')
@@ -70,28 +76,28 @@ if __name__ == '__main__':
     SP = pyspeckit.Spectra(speclist)
     SPa = pyspeckit.Spectra(speclist,xunits='angstroms',quiet=False)
     
-    SP.plotter(figure=figure(1))
-    SPa.plotter(figure=figure(2))
+    SP.plotter(figure=plt.figure(1))
+    SPa.plotter(figure=plt.figure(2))
     
-    figure(3)
-    clf()
-    figure(4)
-    clf()
+    plt.figure(3)
+    plt.clf()
+    plt.figure(4)
+    plt.clf()
     
-    clr = [list(clr) for clr in matplotlib.cm.brg(linspace(0,1,len(speclist)))]
+    clr = [list(clr) for clr in matplotlib.cm.brg(np.linspace(0,1,len(speclist)))]  # @UndefinedVariable
     #clr = [wav2rgb.wav2RGB(c) + [1.0] for c in linspace(380,780,len(speclist))][::-1]
     for ii,(color,spec) in enumerate(zip(clr,speclist)):
-        spec.plotter(figure=figure(3), clear=False, reset=False, color=color, refresh=False)
+        spec.plotter(figure=plt.figure(3), clear=False, reset=False, color=color, refresh=False)
     
-        fig4=figure(4)
+        fig4=plt.figure(4)
         fig4.subplots_adjust(hspace=0.35,top=0.97,bottom=0.03)
-        spec.plotter(axis=subplot(10,1,ii%10+1), clear=False, reset=False, color=color, refresh=False)
+        spec.plotter(axis=plt.subplot(10,1,ii%10+1), clear=False, reset=False, color=color, refresh=False)
         spec.plotter.axis.yaxis.set_major_locator( matplotlib.ticker.MaxNLocator(4) )
     
         if ii % 10 == 9:
             spec.plotter.refresh()
             spec.plotter.savefig('vega_subplots_%03i.png' % (ii/10+1))
-            clf()
+            plt.clf()
     
     spec.plotter.refresh()    
 
