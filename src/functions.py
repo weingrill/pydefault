@@ -3,16 +3,22 @@ Created on Apr 26, 2013
 
 @author: jwe
 '''
+import numpy as np
+import warnings
+
 def gaussian(x, amp = 1.0, mu = 0.0, sigma = 1.0):
-    """ definition of the guassian function"""
-    from numpy import sqrt, pi, exp
-    #TODO: fix
-    y = amp / ( sqrt(2. * pi * sigma) )  * exp( ((x - mu) / sigma)**2 )
+    """ definition of the statistical Gaussian function:
+    amp: amplitude
+    sigma**2: variance
+    mu: average
+    """
+    # see scipy.signal.gaussian
+    y = amp * np.exp(-0.5*((x - mu) / sigma)**2 ) / (sigma * np.sqrt(2. * np.pi * sigma))
     return y
 
 def gauss(x, a, x0, sigma):
-    from numpy import exp
-    return a*exp(-(x-x0)**2/(2*sigma**2))
+    """gauss function to be used by gauss_fit"""
+    return a*np.exp(-(x-x0)**2/(2*sigma**2))
 
 
 def gauss_fit(x, y, amp=None, mean=None, sigma=None ):
@@ -30,13 +36,12 @@ def gauss_fit(x, y, amp=None, mean=None, sigma=None ):
         mean = sum(x*y)/n
     if sigma is None:
         sigma = sum(y*(x-mean)**2)/n
-    popt,_ = curve_fit(gauss, x, y, p0=[amp, mean, sigma])  
+    popt,_ = curve_fit(gauss, x, y, p0=[amp, mean, sigma])
     popt[2] = abs(popt[2])
     return popt  
 
 def scaleto(values, bounds, k=None, d=None):
     """scales values within bounds"""
-    import numpy as np
     x1, x2 = np.min(values),np.max(values)
     y1, y2 = bounds[0], bounds[1]
     if k is None:
@@ -57,15 +62,14 @@ def normalize(values):
 
 def histeq(im, nbr_bins=256):
     """http://www.janeriksolem.net/2009/06/histogram-equalization-with-python-and.html"""
-    from numpy import histogram, interp
     
     #get image histogram
-    imhist,bins = histogram(im.flatten(),nbr_bins,normed=True)
+    imhist,bins = np.histogram(im.flatten(),nbr_bins,normed=True)
     cdf = imhist.cumsum() #cumulative distribution function
     cdf = 255 * cdf / cdf[-1] #normalize
 
     #use linear interpolation of cdf to find new pixel values
-    im2 = interp(im.flatten(),bins[:-1],cdf)
+    im2 = np.interp(im.flatten(),bins[:-1],cdf)
 
     return im2.reshape(im.shape), cdf
 
@@ -76,27 +80,28 @@ def sign(x):
     """
     #TODO: raise depreciation warning
     from math import copysign
+    warnings.warn("Deprecated! please use numpy.sign")
     return copysign(1, x)
     
 def rms(values):
     """returns the root mean square of values"""
-    from numpy import mean, sqrt
     
-    return sqrt(mean(values**2))
+    
+    return np.sqrt(np.mean(values**2))
 
 def modulus(image):
     """returns the modulus of an image,
     which can be used as an estimate for the sky background"""
-    from numpy import histogram, argmax
     
-    h, loc = histogram(image, bins=65536, range=[0,65535])
-    m = argmax(h)
+    h, loc = np.histogram(image, bins=65536, range=[0,65535])
+    m = np.argmax(h)
     return loc[m]
 
 def logspace(lower, upper, num=20):
     """returns true logarithmic spacing between lower and upper
-    instead of numpy version"""
-    import numpy as np
+    instead of numpy version
+    superseded by numpy.geomspace numpy>=v1.13"""
+    warnings.warn("superseded by numpy.geomspace numpy>=v1.13")
     result = np.logspace(0.0, 1.0, num)
     return scaleto(result, [lower, upper])
 
@@ -113,7 +118,6 @@ def autocorrelate(t, y):
     """
     calculate the autocorrelation on irregular data
     """
-    import numpy as np
     from scipy.interpolate import interp1d
 
     #determine the median time step dt:
@@ -140,14 +144,13 @@ def sigma_clip(t, y, e=None,sigmas=3.0):
     """
     performs sigma clipping on a lightcurve
     """
-    from numpy import nanmean, nanstd, compress
-    m = nanmean(y)
-    s = nanstd(y)
+    m = np.nanmean(y)
+    s = np.nanstd(y)
     valid = abs(y-m)<sigmas*s
-    t_clipped = compress(valid, t)
-    y_clipped = compress(valid, y)
+    t_clipped = np.compress(valid, t)
+    y_clipped = np.compress(valid, y)
     if not e is None:
-        e_clipped = compress(valid, e)
+        e_clipped = np.compress(valid, e)
         return t_clipped, y_clipped, e_clipped
     else:
         return t_clipped, y_clipped
@@ -165,10 +168,9 @@ def smooth(x, n = 101, width = 2.0):
     smooth using a gaussian kernel
     """
     from scipy import signal
-    from numpy import pad 
     kernel = signal.gaussian(n, width)
     n = len(x)/2
-    padded_x = pad(x, n, mode='mean')
+    padded_x = np.pad(x, n, mode='mean')
     smoothed = signal.fftconvolve(padded_x, kernel, mode='same')[n:-n]/5
     return smoothed
 
@@ -186,11 +188,10 @@ def largmin(array, i0, direction='left'):
         while i>0 and array[i-1]<array[i]:
             i -= 1
     elif direction=='right':
-        while i<len(array) and array[i+1]<array[i]:
+        while i+1<len(array) and array[i+1]<array[i]:
             i += 1
     return i
 
 def runningmean(x, N=97):
-    from numpy import convolve, ones
-    return convolve(x, ones((N,))/N, mode='same')
+    return np.convolve(x, np.ones((N,))/N, mode='same')
     
