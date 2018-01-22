@@ -52,8 +52,6 @@ def scaleto(values, bounds, k=None, d=None):
 
 def normalize(values):
     """scales values to [0.0, 1.0]"""
-    import numpy as np
-    
     result = values - np.min(values)
     m = np.max(result)
     if abs(m) > 0.0:
@@ -78,15 +76,12 @@ def sign(x):
     http://stackoverflow.com/questions/1986152/
     or use numpy.sign
     """
-    #TODO: raise depreciation warning
     from math import copysign
     warnings.warn("Deprecated! please use numpy.sign")
     return copysign(1, x)
     
 def rms(values):
     """returns the root mean square of values"""
-    
-    
     return np.sqrt(np.mean(values**2))
 
 def modulus(image):
@@ -163,7 +158,7 @@ def phase(t, y, period):
     i = tp.argsort()
     return tp[i], y[i]
 
-def smooth(x, n = 101, width = 2.0):
+def smooth(x, n=101, width=2.0):
     """
     smooth using a gaussian kernel
     """
@@ -180,15 +175,15 @@ def largmin(array, i0, direction='left'):
     """
     if direction not in ['left', 'right']:
         raise ValueError
-    
-    if i0<0 or i0>len(array):
-        raise ValueError
+
+    if i0 < 0 or i0 > len(array):
+        raise ValueError('initial value out of bounds')
     i = i0
-    if direction=='left':
-        while i>0 and array[i-1]<array[i]:
+    if direction == 'left':
+        while i > 0 and array[i-1] < array[i]:
             i -= 1
-    elif direction=='right':
-        while i+1<len(array) and array[i+1]<array[i]:
+    elif direction == 'right':
+        while i+1 < len(array) and array[i+1] < array[i]:
             i += 1
     return i
 
