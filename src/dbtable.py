@@ -13,37 +13,51 @@ class DBTable(Table):
     '''
 
 
-    def __init__(self, datasource, tablename, condition='True'):
+    def __init__(self, datasource, tablename, columns='*', condition='True'):
         '''
         Constructor
         '''
         self.datasource = datasource
         self.tablename = tablename
         
-        columns = self._columns
-        # crude assumption: key is the first column
-        Table.__init__(self, key = columns[0], columns = columns)
         
-        query = "SELECT * FROM %s WHERE %s;" % (tablename, condition)
+        if type(columns)==str and '*' in columns:
+            # get columns by property
+            columns_str = columns
+        elif type(columns)==str and ',' in columns:
+            # nothing to to, columns is a string
+            columns_str = columns
+        elif type(columns)==list:
+            columns_str = ', '.join(columns) 
+        
+        query = "SELECT {0} FROM {1} WHERE {2};".format(columns_str, tablename, condition)
         data = datasource.query(query)
+        
+        columns = self._columns
+        
+        # crude assumption: key is the first column
+        #execute super Constructor; alternative use for super(): 
+        #super(Table, self).__init__(key = columns[0], columns = columns) 
+        Table.__init__(self, key = columns[0], columns = columns)
         self.append(data)
 
     @property
     def _columns(self):
-        query = """SELECT column_name
-            FROM INFORMATION_SCHEMA.COLUMNS 
-            WHERE table_name = '%s';""" % self.tablename
-        result = self.datasource.query(query)
-        return [r[0] for r in result]
+        '''property to return the list of columns in the query'''
+        result = [column.name for column in self.datasource.cursor.description]
+        return result
 
 
 class DBArray(object):
-    def __init__(self, datasource, tablename, condition='TRUE'):
+    def __init__(self, datasource, tablename, columns='*', condition='TRUE'):
         '''
         Constructor
         '''
+        import numpy as np
+        
         self.datasource = datasource
         self.tablename = tablename
+        self.columns = columns
         
         query = "SELECT * FROM %s WHERE %s;" % (tablename, condition)
         data = self.datasource.query(query)
@@ -59,17 +73,13 @@ class DBArray(object):
             arraydata.append(tuple(star))
         self.array = np.array(arraydata, dtype = zip(columns, data_types))    
 
-if __name__ == '__main__':
+def _test_DBTable():
     from datasource import DataSource
     import matplotlib.pyplot as plt
     import numpy as np
+
     ds = DataSource(database='stella', user='stella', host='pera.aip.de')
-    
-    a = DBArray(ds, 'ngc6633')
-    plt.plot(a['bv'],a['period'])
-    plt.show()
-    
-    t = DBTable(ds, 'm48phot', condition="starid LIKE '%F1%' ORDER BY ra")
+    t = DBTable(ds, 'm48phot', columns=['starid','ccdy','ra'], condition="starid LIKE '%F1%' ORDER BY ra")
     
     print t.columns
     print t['starid']
@@ -81,5 +91,15 @@ if __name__ == '__main__':
     print p
     plt.plot(x, y-np.polyval(p, x),'o')
     plt.show()
+
+def _test_DBArray():
+    from datasource import DataSource
+    import matplotlib.pyplot as plt
+    ds = DataSource(database='stella', user='stella', host='pera.aip.de')
     
-    #print r.column('zero')        
+    a = DBArray(ds, 'candidates')
+    plt.plot(a['bv'],a['period'])
+    plt.show()
+    
+if __name__ == '__main__':
+    _test_DBTable()
