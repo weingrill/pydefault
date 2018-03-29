@@ -102,6 +102,7 @@ def logspace(lower, upper, num=20):
 
 def file_exists(filepath):
     ''' Check if a file exists and is accessible. '''
+    warnings.warn("Deprecated! please use os.path.exists")
     try:
         f = open(filepath, 'rb')
     except IOError:
