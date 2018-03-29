@@ -62,11 +62,11 @@ class Apass(object):
         data = urllib2.urlopen(full_url)
         self.results = data.read()
         print len(self.results)
-        with open('/work2/jwe/result.csv','w') as f:
+        with open('/work2/jwe/apass.csv','w') as f:
             f.write(self.results)
         self._result2array()
     
-    def loadfromfile(self, filename='/work2/jwe/result.csv'):
+    def loadfromfile(self, filename='/work2/jwe/apass.csv'):
         '''
         loads data from file instead from url
         '''
@@ -81,7 +81,7 @@ class Apass(object):
         def NAfloat(s):
             if '.' in s:
                 return float(s)
-            elif 'NA' in s:
+            elif 'NA' in s or '-0' in s:
                 return np.nan
             else:
                 return int(s)
@@ -141,8 +141,8 @@ if __name__ == '__main__':
     
     
     clustercoordinates =  SkyCoord(cluster['NGC 6633'], unit=(u.hourangle, u.deg))    
-    apass = Apass(clustercoordinates, radius = 0.2)
-    #apass.loadfromurl()
-    apass.loadfromfile()
-    apass.todatabase()
+    apass = Apass(clustercoordinates, radius = 1.0)
+    apass.loadfromurl()
+    #apass.loadfromfile()
+    #apass.todatabase()
     #print apass.stars
