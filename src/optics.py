@@ -53,14 +53,15 @@ class Detector(object):
         requires pixels with two entries: [width, height]
         pixelsize (assumed to be quadratic)
         """
-        detectors = {'ICX205AL':([1280, 960],4.65e-6),
-                 'ICX204AL':    ([1024, 768],4.65e-6),
-                 'ICX098BL':    ([640, 480],5.6e-6),
-                 'ICX618ALA':   ([640, 480],5.6e-6),
-                 'AR0130CS':    ([1280, 960],3.75e-6), #ASI120MM
+        detectors = {'ICX205AL':([ 1280,   960], 4.65e-6),
+                 'ICX204AL':    ([ 1024,   768], 4.65e-6),
+                 'ICX098BL':    ([  640,   480], 5.6e-6),
+                 'ICX618ALA':   ([  640,   480], 5.6e-6),
+                 'AR0130CS':    ([ 1280,   960], 3.75e-6), #ASI120MM
                  'STA1600LN':   ([10560, 10560], 9e-6),
-                 'IMX174LLJ':   ([1936, 1216], 5.86e-6), #ASI 174 MM
-                 'Canon1200':   ([5184 , 3456], 4.3e-6) #Canon 1200Da
+                 'IMX174LLJ':   ([ 1936,  1216], 5.86e-6), #ASI 174 MM
+                 'Canon1200':   ([ 5184,  3456], 4.3e-6), #Canon 1200Da
+                 'MN34230':     ([ 4656,  5320], 3.8e-6) #ASI 1600MM Pro
                  }
         if name in detectors:
             pixels, pixelsize = detectors[name]
@@ -151,7 +152,8 @@ class Telescope(object):
                  'ETX':          (0.08, 0.4),
                  'ASA8H':        (0.2, 0.56),
                  'TS100':        (0.1, 0.58),
-                 'Omegon714':    (0.102, 0.714)}
+                 'Omegon714':    (0.102, 0.714),
+                 'Omegon150':    (0.150, 1.0)}
         if name in teldb:
             diameter, focallength = teldb[name]
             print teldb[name]
@@ -334,7 +336,3 @@ magnification: %(magnification)d×
 true FOV:      %(truefov)d '
         """ % data
         return result
-        
-    
-
-    
