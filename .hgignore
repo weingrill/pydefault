@@ -10,3 +10,6 @@ glob:multipage_pdf.pdf
 glob:.settings/*
 glob:.project
 glob:.pydevproject
+
+syntax: regexp
+^venv$
