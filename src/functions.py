@@ -78,6 +78,7 @@ def sign(x):
     """
     from math import copysign
     warnings.warn("Deprecated! please use numpy.sign")
+
     return copysign(1, x)
     
 def rms(values):
