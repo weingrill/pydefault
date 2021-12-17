@@ -7,7 +7,7 @@ __author__ = "Joerg Weingrill"
 __copyright__ = "Copyright 2021 Leibniz-Insitute for Astrophysics Potsdam (AIP)"
 __credits__ = ["Joerg Weingrill"]
 __license__ = "GPL"
-__version__ = "0.0.1"
+__version__ = "1.0.1"
 __maintainer__ = "Joerg Weingrill"
 __email__ = "jweingrill@aip.de"
 __status__ = "Development"
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser.add_argument('-b', '--build', action='store_true', help='increase build')
     parser.add_argument('-r', '--release', action='store_true', help='increase release')
     parser.add_argument('-v', '--version', action='store_true', help='increase version')
-
+    parser.add_argument('--verbose', action='store_true', help='verbose output')
     parser.add_argument('filename', help='python file to pase for version string')
 
     args = parser.parse_args()
@@ -35,11 +35,13 @@ if __name__ == "__main__":
                     release = int(release) + 1
                 if args.version:
                     version = int(version) + 1
-                new_version_string = f'__version__ = "{version}.{release}.{build}"'
-                print(new_version_string)
+                new_version_string = f'__version__ = "{version}.{release}.{build}"\n'
+                if args.verbose:
+                    print(new_version_string)
                 lines = lines + new_version_string
             else:
-                print(f'{line}', end='')
+                if args.verbose:
+                    print(f'{line}', end='')
                 lines = lines + line
     with open(args.filename, "wt") as file:
         file.writelines(lines)
