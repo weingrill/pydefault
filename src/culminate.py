@@ -49,5 +49,5 @@ for i in range(365):
     at = izana.next_antitransit(sun)
     
     izana.date = at 
-    print izana.sidereal_time(), izana.date 
+    print(izana.sidereal_time(), izana.date)
 
